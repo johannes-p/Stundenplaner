@@ -1,0 +1,6 @@
+@import "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css";
+
+html{
+        height: 100%;
+        background: linear-gradient(to top right, cyan, pink 60%);
+    }
