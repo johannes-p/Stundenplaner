@@ -4,15 +4,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="main.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-<script type="text/javascript" src="index.js"></script>
 </head>
 
 <body>
-    <div class="container">
+<div class="container">
     <div class="columns">
         <div class="column">
-            <table class="table is-bordered">
-                <tr>
+            <table id="timetable" class="table is-bordered is-fullwidth">
+                <!-- <tr>
                     <th>Stunde</th>
                     <th>Montag</th>
                     <th>Dienstag</th>
@@ -29,13 +28,51 @@
                     <td>1.Stunde Freitag</td>
                 </tr>
                 <tr>
-                    <th>17:10-17:55</th>
+                    <th>17:55-18:40</th>
                     <td>2.Stunde Montag</td>
                     <td>2.Stunde Dienstag</td>
                     <td>2.Stunde Mittwoch</td>
                     <td>2.Stunde Donnerstag</td>
                     <td>2.Stunde Freitag</td>
                 </tr>
+                <tr>
+                    <td>5 Minuten Pause</td>
+                </tr>
+                <tr>
+                    <th>18:45-19:30</th>
+                    <td>3.Stunde Montag</td>
+                    <td>3.Stunde Dienstag</td>
+                    <td>3.Stunde Mittwoch</td>
+                    <td>3.Stunde Donnerstag</td>
+                    <td>3.Stunde Freitag</td>
+                </tr>
+                <tr>
+                    <th>19:30-20:15</th>
+                    <td>4.Stunde Montag</td>
+                    <td>4.Stunde Dienstag</td>
+                    <td>4.Stunde Mittwoch</td>
+                    <td>4.Stunde Donnerstag</td>
+                    <td>4.Stunde Freitag</td>
+                </tr>
+                <tr>
+                    <td>10 Minuten Pause</td>
+                </tr>
+                <tr>
+                    <th>20:25-21:10</th>
+                    <td>5.Stunde Montag</td>
+                    <td>5.Stunde Dienstag</td>
+                    <td>5.Stunde Mittwoch</td>
+                    <td>5.Stunde Donnerstag</td>
+                    <td>5.Stunde Freitag</td>
+                </tr>
+                <tr>
+                    <th>21:10-21:55</th>
+                    <td>6.Stunde Montag</td>
+                    <td>6.Stunde Dienstag</td>
+                    <td>6.Stunde Mittwoch</td>
+                    <td>6.Stunde Donnerstag</td>
+                    <td>6.Stunde Freitag</td>
+                </tr> -->
             </table>
         </div>
 
@@ -55,7 +92,7 @@
                                 <input type="checkbox">
                             </label>
                         </td>
-                        <td class="has-text-centered"> <!--Set Background? style="background:green" -->
+                        <td class="has-text-centered">
                             <label class="checkbox">
                                 <input type="checkbox">
                             </label>
@@ -68,8 +105,7 @@
                 </table>
                 <div class="buttons">
                     <button class="button is-success">Bestätigen</button>
-                    <button class="button is-info">Laden</button>
-                    <button class="button is-primary is-outlined">Info</button>
+                    <button class="button is-info">Info</button>
                 </div>
                 
             </div>
@@ -78,7 +114,12 @@
 
 </div>
 
-    <script src="Script.js"></script>
+<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+<script type="text/javascript" src="https://unpkg.com/ical.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+
+<script type = "text/babel" src="index.js"></script>
 </body>
 
 

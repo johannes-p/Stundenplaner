@@ -4,3 +4,16 @@ html{
         height: 100%;
         background: linear-gradient(to top right, cyan, pink 60%);
     }
+
+#timetable td + td {
+    border-bottom: 0px;
+    border-top: 0px;
+}
+
+#lesson{
+    background: rgb(90, 209, 90);
+}
+
+/* #empty{
+    
+} */
