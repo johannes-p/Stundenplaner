@@ -21,6 +21,7 @@ function Mytable(props){
     items["rows"] = new Array;
     const colCount = props.headings.length
     const rowCount = Object.keys(lessons).length
+    console.log(colCount)
 
 
     items["headings"].push(<th>Stunde</th>) //Description of y-axis (leave empty?)
@@ -29,15 +30,15 @@ function Mytable(props){
         items["headings"].push(<th>{heading}</th>)  //add column title
     }
     
-    for(let row=0; row<colCount; row++){
+    for(let row=0; row<rowCount; row++){
         items["rows"][row] = new Array; //new array => new row 
         items["rows"][row].push(<td id="rowInfo">{row+1}.Stunde</td>)
     }
 
     let dataError = false;
 
-    for(let row=0; row<colCount; row++){ //Generate Array for row
-        for(let column=0; column < rowCount; column++){
+    for(let row=0; row<rowCount; row++){ //Generate Array for row //FIXME: switched row and column? -> expected output, wrong variable assignment
+        for(let column=0; column < colCount; column++){
             if(lessons[column][row] !== undefined){
                 dataError = true;
             }
@@ -75,8 +76,8 @@ function Mytable(props){
   )
 }
 
-var Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
-var lessons = {'0':["A","","L","GWK","GSP"],'1':["B","D","L","GWK","GSP"],'2':["C","D","","GWK","GSP"],'3':["D","D","L","GWK",""],'4':["E","D","L","GWK",""], '5':["E","F","G","",""]}; // '1' Array -> 1. row
+var Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
+var lessons = {'0':["A","","","L","GWK","GSP"],'1':["B","D","L","GWK","GSP"],'2':["C","D","","GWK","GSP"],'3':["D","D","L","GWK",""],'4':["E","D","L","GWK",""], '5':["E","F","G","",""]}; // '1' Array -> 1. row
 const time_table = <Mytable headings={Days} lessons={lessons}/>;
 
 ReactDOM.render(time_table, document.getElementById("timetable"));
