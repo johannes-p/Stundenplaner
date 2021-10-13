@@ -19,28 +19,41 @@ function Mytable(props){
     const items = [];
     items["headings"] = new Array;
     items["rows"] = new Array;
-    const rowcount = props.lessons['0'].length //set max row amount (all rows need to have the same amount of cols!)
+    const colCount = props.headings.length
+    const rowCount = Object.keys(lessons).length
+
+
     items["headings"].push(<th>Stunde</th>) //Description of y-axis (leave empty?)
 
     for(let heading of props.headings){
-        items["headings"].push(<th>{heading}</th>)
+        items["headings"].push(<th>{heading}</th>)  //add column title
     }
     
-    for(let row=0; row<rowcount; row++){
-        items["rows"][row] = new Array;
+    for(let row=0; row<colCount; row++){
+        items["rows"][row] = new Array; //new array => new row 
         items["rows"][row].push(<td id="rowInfo">{row+1}.Stunde</td>)
     }
 
-    for(let day in props.headings){ //Generate Array for row
-        for(let rowindex=0; rowindex < rowcount; rowindex++){
-            if(lessons[rowindex][day] != ""){
-                items["rows"][rowindex].push(<td id="lesson">{lessons[rowindex][day]}</td>) //Iterating over lessons (Mon 1h -> Tue 1h -> ... -> Mon 2h -> ..)
+    let dataError = false;
+
+    for(let row=0; row<colCount; row++){ //Generate Array for row
+        for(let column=0; column < rowCount; column++){
+            if(lessons[column][row] !== undefined){
+                dataError = true;
+            }
+
+            if(lessons[column][row] != "" && lessons[column][row] !== undefined){ //TODO: Check if !== undefined is working as expected and if a missing entry in "lesson rows" disrupts "authenticity"
+                console.log(lessons[column][row])
+                items["rows"][column].push(<td id="lesson">{lessons[column][row]}</td>) //Iterating over lessons (Mon 1h -> Tue 1h -> ... -> Mon 2h -> ..)
             }
             else{
-                items["rows"][rowindex].push(<td id="empty">{lessons[rowindex][day]}</td>) //adding another id (cell styling)
+                items["rows"][column].push(<td id="empty">{lessons[column][row]}</td>) //adding another id (cell styling)
             }
-            
         }
+    }
+
+    if(dataError){
+        alert("Die Daten welche zur Erstellung des Stundenplans verwendet werden sind fehlerhaft.\nDie Ausgabe könnte Fehler enthalten.")
     }
     
     var tableData = items["rows"].map(function(obj) {
@@ -62,8 +75,8 @@ function Mytable(props){
   )
 }
 
-// var Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
-// var lessons = {'0':["A","D","L","GWK","GSP"],'1':["B","D","L","GWK","GSP"],'2':["C","D","L","GWK","GSP"],'3':["D","D","L","GWK","GSP"],'4':["E","D","L","GWK","GSP"]}; // '1' Array -> 1. row
-// const time_table = <Mytable headings={Days} lessons={lessons}/>;
+var Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+var lessons = {'0':["A","","L","GWK","GSP"],'1':["B","D","L","GWK","GSP"],'2':["C","D","","GWK","GSP"],'3':["D","D","L","GWK",""],'4':["E","D","L","GWK",""], '5':["E","F","G","",""]}; // '1' Array -> 1. row
+const time_table = <Mytable headings={Days} lessons={lessons}/>;
 
-// ReactDOM.render(time_table, document.getElementById("timetable"));
+ReactDOM.render(time_table, document.getElementById("timetable"));

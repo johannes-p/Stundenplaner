@@ -9,6 +9,9 @@ html{
     border-bottom: 0px;
     border-top: 0px;
 }
+#timetable{
+    border-radius: 10px;
+}
 
 #lesson{
     background: rgb(90, 209, 90);
