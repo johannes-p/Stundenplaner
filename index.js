@@ -4,10 +4,12 @@
 let events = [];
 const weekdays = new Array("Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag")
 
-
 const lessonsArray = new Array;
 
+var files = ["./data/3P.ics","./data/5P.ics"] //TODO: should be in descending order
+
 function populate(){
+    //TODO: Check if all lessons of subject fit, otherwise remove all lessons of that type
     for(let lesson of lessonsArray){
         if(lessons[lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] == ""){
             lessons[lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] = `${lesson.subject} ${lesson.teacher}`; //TODO: put module name instead of subject
@@ -76,26 +78,42 @@ function generateLessonArray(){ //TODO: join same subject lessons together
 }
 
 var reader = new FileReader();
-reader.onload = function(event){
-    var iCalendarData = reader.result;
-    var jcalData = ICAL.parse(iCalendarData);
-    
-    //console.log(jcalData)
-    events = jcalData[2];
-    //console.log(events)
+const fetchFiles = (iterator) => {
 
-    generateLessonArray()
-    //console.log(lessonsArray)
-    RenderCheckboxes()
+    if (iterator >= 0)
+    {
+        fetch(files[iterator])
+        .then(res => res.blob())
+        .then(blob => {
+            reader.readAsText(blob);
 
-    populate() //TODO: move to right location
-    ReactDOM.render(time_table, document.getElementById("timetable")); //FIXME: reading ics will be ASYNC
+            reader.onload = function(e) {
+                // The file's text will be printed here
+                //console.log(e.target.result)
+                
+                var iCalendarData = reader.result;
+                var jcalData = ICAL.parse(iCalendarData);
+                    
+                events = jcalData[2];
+
+                generateLessonArray() //TODO: pass semester - split from filename
+                RenderCheckboxes()
+
+                console.log(`populating using ${files[iterator]}`)
+                populate()
+                ReactDOM.render(time_table, document.getElementById("timetable")); //FIXME: reading ics will be ASYNC
+                
+                fetchFiles(iterator-1);
+              };
+
+        })
+    }
 }
 
-fetch('./data/5P.ics') //TODO: Load from github (zip?)
-.then(res => res.blob())
-.then(blob => reader.readAsText(blob), function(val){console.log("val.result")})
 
+
+
+fetchFiles(files.length-1)    //load all files
 
 //TODO: Parse ics -> separate 1h and 1h+ lessons? (less checks) -> check [row][day] -> populate -> check -> populate -> ... -> exit
 
