@@ -4,8 +4,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="main.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 
+<!-- <body oncontextmenu="return false;"> -->
 <body>
 <div class="container">
     <div class="columns">
@@ -103,10 +105,32 @@
                     </tr>
                     </table>
                 </table>
-                <div class="buttons">
-                    <button class="button is-success">Bestätigen</button>
-                    <button class="button is-info">Info</button>
+                <div class="columns">
+                    <div class="column">
+                        Fernstudium? <input type="checkbox"/>
+                    </div>
+                    <div class="column">
+                        Latein? <input type="checkbox"/>
+                    </div>
+                    <div class="column">
+                        Französisch? <input type="checkbox"/>
+                    </div>
                 </div>
+                
+                <div class="columns">
+                    <div class="column">
+                        <div class="buttons">
+                            <!--Add button with on click function populate()-->
+                            <button class="button is-primary" onclick="populate()">Speichern</button>
+                            <button class="button is-success">Bestätigen</button>
+                            <button class="button is-info">Info</button>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <b>Stundenplandaten: Wintersemester-XY</b>
+                    </div>
+                </div>
+                
                 
             </div>
         </div>
@@ -120,6 +144,7 @@
 <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
 
 <script type = "text/babel" src="index.js"></script>
+<script src = "classes.js"></script>
 </body>
 
 
