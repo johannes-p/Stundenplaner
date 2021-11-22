@@ -3,15 +3,18 @@
 
 //TODO: if full hour make cell span 2 rows
 
+//FIXME: when removing lessons and clicking populate, cells sometimes miss the lesson class (styling)
 
 //FIXME: pressing populate a second time after removing lessons is broken
 //Does it cycle through valid options? only cycling on wednesday 1h - no
 
-//TODO: if module not bookable, ignore all following modules of same type (beware of same subjects with different endings p,s,..)
+//TODO: if module not bookable, ignore all following modules of same type (beware of same subjects with different endings p,s,q,..)
 
 //TODO: restrict to checkboxtable!! add checkbox id to ignoreAP
 //TODO: after populating check if row = row + 1 (/row = row-1) (only on even numbers) -> rowspan 2 and remove entry on row+1
 //FIXME: SEMESTERS - Module Name ->> Count modules
+
+//FIXME: TODO: Use Module + Teacher while populating
 
 let events = []; //calendar events
 const weekdays = new Array("Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag")
@@ -23,14 +26,46 @@ var files = ["./data/1S.ics","./data/1P.ics","./data/2S.ics","./data/3P.ics","./
 //invert files array
 files = files.reverse()
 
+var ignoredSubject = ["R","Eth","L","F","ÖKO"]
+//TODO: hide ignored subjects
+
 var ignoreAP = new Set(); //"already populated"
 
-function addCheckboxtoAP(){
-    ignoreAP.clear()
+var moduleCountDict = {}
+
+function getModuleCount(subject, semester){
+ 
+    if(moduleCountDict[semester] == undefined){
+        moduleCountDict[semester] = {}
+    }
+
+    if(moduleCountDict[semester][subject] != undefined){
+        return moduleCountDict[semester][subject]
+    } else {
+        for(let s=Object.keys(moduleCountDict).length; s >= 0; s--){
+            try{
+                if(moduleCountDict[s][subject] != undefined){
+                    moduleCountDict[semester][subject] = moduleCountDict[s][subject] + 1
+                    return moduleCountDict[semester][subject]
+                }
+            }
+            catch(e){
+                //console.log(e)
+                continue
+            }
+        }
+        moduleCountDict[semester][subject] = 1;
+        return 1
+    }
+    
+}
+
+function addCheckboxtoAP(){ //FIXME: this might be broken later - consider using a secon array/set
+    ignoreAP.clear() //TODO: to cycle through possible timetable combinations, this needs to be removed (adding removed lessons to ignoreAP)
     var idSelector = function() { return this.id; };
     var dontPopulate = $(":checkbox:checked").map(idSelector).get();
-    //TODO: remove all checkbox ids from outside of checkbox table
-    dontPopulate.forEach(ignoreAP.add, ignoreAP); //???
+    //TODO: remove all checkbox ids from outside of checkbox table and ignore checkboxes that can not be populated (R,..)
+    dontPopulate.forEach(ignoreAP.add, ignoreAP);
 }
 
 function populate(){
@@ -43,12 +78,17 @@ function populate(){
     addCheckboxtoAP()
     for(let semester in lessonsArray){
         //check if lessonsArray[semester] empty
-        if(lessonsArray[semester].length == 0){ //FIXME: if continue -> code breaks
-            //continue;
-        }
+        // if(lessonsArray[semester].length == 0){ //FIXME: if continue -> code breaks
+        //     continue;
+        // }
         for(let subjectindex in lessonsArray[semester]){
             
             for(lesson of lessonsArray[semester][subjectindex]){
+                if(ignoredSubject.includes(lesson.subject)){
+                    console.warn(`${lesson.module_name} is ignored`)
+                    break
+                }
+
                 let index = lessonsArray[semester][subjectindex].indexOf(lesson) + 1;
                 let lessonCount = lessonsArray[semester][subjectindex].length;
 
@@ -98,14 +138,24 @@ function populate(){
                         break //leave loop to ignore remaining lessons of this module
                     }
                 } else {
-                    console.log(`skipping ${lesson.module_name} - ${lesson.module_name.slice(0,-1)} Module already populated`)
+                    console.table(`skipping ${lesson.module_name} - ${lesson.module_name.slice(0,-1)} Module already populated`)
                     break //FIXME: Maybe does nothing?
                 }
             }
         }
     }
+    styleCheckboxtable()
     time_table = <Mytable headings={Days} lessons={lessons}/>;
     ReactDOM.render(time_table, document.getElementById("timetable"));
+}
+
+function styleCheckboxtable(){
+    console.log(ignoreAP)
+    ignoreAP.forEach(module => {
+        console.log(module)
+        //style element with id module
+        $("#" + module).parent().parent().css("background-color", "lime");
+    })
 }
 
 // const Scheme = [[[17,10],[17,55]] , [[17,55],[18,40]] , [[18,45],[19,30]] , [[19,30],[20,15]] , [[20,25],[21,10]] , [[21,10],[21,55]]]
@@ -182,14 +232,14 @@ $(document).ready(function(){
 //     console.warn("Lesson not in specified scheme.")
 // }
 
-function generateLessonArray(filename){ //TODO: join same subject lessons together
-    // if(events.length == 0){
-    //     //alert("Keine Stunden gefunden!")
-    //     let semester_and_moduletype = filename.split("/")[filename.split("/").length - 1].split(".")[0] // filename.split.length equal -1 (last element of array)
-    //     let semester = semester_and_moduletype.charAt(0)
-    //     lessonsArray[semester] = new Array()
-    //     return
-    // }
+function generateLessonArray(filename){
+    if(events.length == 0){
+        // alert("Keine Stunden gefunden!")
+        // // let semester_and_moduletype = filename.split("/")[filename.split("/").length - 1].split(".")[0] // filename.split.length equal -1 (last element of array)
+        // // let semester = semester_and_moduletype.charAt(0)
+        // // lessonsArray[semester] = new Array() //FIXME: empty array needed?
+        return
+    }
 
     for(let index in events){
         let starttime = new Date(events[index][1][1][3]);
@@ -200,15 +250,19 @@ function generateLessonArray(filename){ //TODO: join same subject lessons togeth
         let teacher = events[index][1][5][3];
         //TODO: Use ical.js functionality instead of indexing to array values
         
-        
+
         let semester_and_moduletype = filename.split("/")[filename.split("/").length - 1].split(".")[0] // filename.split.length equal -1 (last element of array)
-        let semester = semester_and_moduletype.charAt(0) 
-        //Check if subject is "L" or "F" in these cases semester[0] - 1  (only when populating timetable - not for the checkbox table)
-        //Needed to compensate for Semestercount in formular (Webuntis -> Semester 2, formular Semester 1)
+        //let moduletype = semester_and_moduletype.charAt(1)
+
+        let semester = semester_and_moduletype.charAt(0)
         
-        let module_name = subject + semester_and_moduletype;
+        var Counter = getModuleCount(subject, semester)
         
-        //TODO: add semester to checkbox table
+        let module_name = subject + Counter + semester_and_moduletype.charAt(1); //FIXME: CHECKBOX IDS
+        
+        //console.log(subject + semester_and_moduletype)
+        //let module_name = subject + semester_and_moduletype; //FIXME: module counter + moduletype - not semester
+        
         //console.log(`${weekday} ${duration}min ${subject} ${teacher}`)
         
         if(lessonsArray[semester] == undefined){
@@ -287,25 +341,24 @@ function Mytable(props){
         items["headings"].push(<th>{heading}</th>)  //add column title
     }
     
-    for(let row=0; row<rowCount; row++){
+    for(let row=0; row<rowCount; row++){ //HourCounter
         items["rows"][row] = new Array; //new array => new row
         if(row%2 == 0){
-             
-            items["rows"][row].push(<td id="rowInfo" rowspan ="2">{(row/2)+1}.Stunde</td>) //FIXME: added rowspan - remove if not working
+            items["rows"][row].push(<td id="rowInfo" rowSpan ="2">{(row/2)+1}.Stunde</td>) //FIXME: added rowspan - remove if not working
         }
     }
 
-    let dataError = false;
+    // let dataError = false;
 
     for(let row=0; row<rowCount; row++){
         for(let column=0; column < colCount; column++){
             console.log(lessons[row])
             console.log(lessons[row][column])
             
-            if(lessons[row] == undefined || lessons[row][column] == undefined){
-                dataError = true;
-                continue
-            }
+            // if(lessons[row] == undefined || lessons[row][column] == undefined){
+            //     dataError = true;
+            //     continue
+            // }
             //TODO: Check if lessons[row-1][col] has rowspan2 in that case "continue"
             if(lessons[row][column] != "" && lessons[row][column] !== undefined){ //TODO: Check if !== undefined is working as expected and if a missing entry in "lesson rows" disrupts "authenticity"
                 //console.log(lessons[column][row])
@@ -319,9 +372,9 @@ function Mytable(props){
         }
     }
 
-    if(dataError){
-        alert("Stundenplan fehlerhaft!")
-    }
+    // if(dataError){
+    //     alert("Stundenplan fehlerhaft!")
+    // }
     
     var tableData = items["rows"].map(function(obj) {
         return <tr>{obj}</tr>
@@ -366,13 +419,13 @@ function Checkboxtable(props){
         
         for(let subject of props.subjects){
             if(props.boxPositions[x].has((subject + (x+1)))){ //FIXME: This won't work if Semesterfiles are missing (x index not taking into account present files) 3P, 5P, 2S -> still searching for M1, M2, M3 etc.
-                rows["rows"][x].push(<td className="has-text-centered"><label className="checkbox"><input type="checkbox" id={subject + (x+1)}/></label></td>)
+                // rows["rows"][x].push(<td className="has-text-centered"><label className="checkbox"><input type="checkbox" id={subject + (x+1)}/></label></td>)
+                rows["rows"][x].push(<td className="has-text-centered"><label className="checkbox"><input type="checkbox" id={subject + moduleCountDict[x+1][subject]}/></label></td>)
             } else {
                 rows["rows"][x].push(<td className="has-text-centered" id="emptyField"></td>)
             }
         }
     }
-    //TODO: Push Semester Counter 
     
 
 
@@ -382,7 +435,7 @@ function Checkboxtable(props){
     )
     //TODO: Get Semester of specific subject, ignore fully checked rows (=Semesterfile - when populating)
 
-    //for(subject.)
+    //for(subject.)???
 
     return (
         <React.Fragment>
@@ -413,8 +466,14 @@ function RenderCheckboxes(){
     for(let semester in lessonsArray){
         CheckboxArray[semester] = new Set()
         for(let subject in lessonsArray[semester]){
+
+            
+
             subjectHeadings.add(subject.slice(0, -2))
-            CheckboxArray[semester].add(subject.slice(0, -1)) //used for checkbox placement
+            // CheckboxArray[semester].add(subject.slice(0, -1)) //used for checkbox placement
+            CheckboxArray[semester].add(subject.slice(0, -2) + semester) //FIXME: counter not working correctly
+            console.log(subject.slice(0, -2) + semester)
+            console.log(subject.slice(0, -1))
         }
     }
     
