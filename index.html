@@ -9,6 +9,10 @@
 
 <!-- <body oncontextmenu="return false;"> -->
 <body>
+<div id="loading">
+    <div class="lds-default"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+</div>
+
 <div class="container">
     <div class="columns">
         <div class="column">
@@ -107,19 +111,35 @@
                 </table>
                 <div class="columns">
                     <div class="column">
-                        Fernstudium? <input type="checkbox"/>
-                    </div>
-                    <div class="column">
-                        <label class="label">2. Fremdsprache</label>
+                        <label class="label">Studienart</label>
                         <div class="select">
-                            <select>
-                                <option>Latein</option>
-                                <option>Französisch</option>
+                            <select required autocomplete="off"> 
+                                <option value="" disabled selected>Belegung wählen</option>
+                                <option>Fernstudium</option>
+                                <option>Präsenzstudium</option>
+                                <option>Präsenz + Fernstudium</option>
+                                <!-- Add mix, populating present first, then try to add..-->
                             </select>
                         </div>
                     </div>
                     <div class="column">
-                        Checkbox XY <input type="checkbox"/>
+                        <label class="label">2. Fremdsprache</label>
+                        <div class="select" id="second-lang">
+                            <select required autocomplete="off"> 
+                                <option value="" disabled selected>Sprache wählen</option>
+                                <option value="L">Latein</option>
+                                <option value="F">Französisch</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <label class="label">Fächer mehrfach belegen</label>
+                        <div class="select" id="double-book">
+                            <select required autocomplete="off"> 
+                                <option value="n">Nein</option>
+                                <option value="y">Ja</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 
@@ -127,17 +147,15 @@
                     <div class="column">
                         <div class="buttons">
                             <!--Add button with on click function populate()-->
-                            <button class="button is-primary" onclick="populate()">Speichern</button>
-                            <button class="button is-success">Bestätigen</button>
+                            <button id="start-btn" class="button is-primary" onclick="populate()">Bestätigen</button>
+                            <!-- <button class="button is-success"></button> -->
                             <button class="button is-info">Info</button>
                         </div>
                     </div>
                     <div class="column">
                         <b>Stundenplandaten: Wintersemester-XY</b>
                     </div>
-                </div>
-                
-                
+                </div>        
             </div>
         </div>
     </div>
