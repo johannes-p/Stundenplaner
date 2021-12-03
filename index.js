@@ -1,13 +1,12 @@
 //Necessary:
 //TODO: hide other 2nd languages if another one is selected
 
-//TODO: add select for ME/BE
-
 //INF1 only in presence
 //ÖKO1 & 2 in same semester - TODO: check if Öko1 and just add two Checkboxes at first accourance (static Checkboxid)?
 // this will make problems when styling (two checkboxes in one cell) - maybe add two blocks in chell containing checkboxes
 //Check if Subject has two different Modules (e.g. 1 and 2 in one semester) and add two checkboxes in this case
 
+//either check that all selects are filled or use default values
 
 //Maybe?
 
@@ -248,11 +247,6 @@ function getTimeTableIndex(starttime,endtime){
     let starttimeString = ('0' + starttime.getHours()).slice(-2) + ":" + ('0' + starttime.getMinutes()).slice(-2)
     let endtimeString = ('0' + endtime.getHours()).slice(-2) + ":" + ('0' + endtime.getMinutes()).slice(-2)
 
-    //let starttimeString = starttime.getHours() + ":" + starttime.getMinutes()
-    //let endtimeString = endtime.getHours() + ":" + endtime.getMinutes()
-
-    //console.log(`starttime: ${starttimeString} endtime: ${endtimeString}`)
-
     for(var x in HalfHourScheme){
         if(starttimeString >= HalfHourScheme[x][0])
         {
@@ -268,59 +262,41 @@ function getTimeTableIndex(starttime,endtime){
     for(var x in FullHourScheme){
         if(starttimeString >= FullHourScheme[x][0])
         {
-            if( endtimeString <= FullHourScheme[x][1]) //TODO: Check if working correctly - don't check for hours and mins individually, won't work if endtime < specified scheme endtime
+            if( endtimeString <= FullHourScheme[x][1])
             {
                 //console.log(`Index: ${x}`)
                 //TODO: Cell span 2
                 //FIXME: This will break stuff
-                
-                //TODO: set the full hour (both halfhour cells) (x*2) and (x*2)+1
                 return x*2
             }
         }
     }
 }
 
-//use jquery to get right clicked element
+//removing lessons from timetable using jquery to get right clicked element
 $(document).ready(function(){
     $(document).on("click", ".lesson", function(event){
         if(event.which == 1){ //TODO: right click not working (3)
             var cell = $(this);
 
-            console.log(cell.text());  
+            console.log(`removing ${cell.text()}`);  
             
             // remove color from checkbox table cell
             let checkboxid = cell.text().split(" ")[0].slice(0,-1)
             $("#" + checkboxid).parent().parent().css("background-color", "white");
 
-
             //get all elements with this text
             var elements = $(`td:contains(${cell.text()})`);
+            
             //remove text of all elements
-            elements.each(function(){ //TODO: https://stackoverflow.com/questions/43787533/add-remove-css-classes-with-react
+            elements.each(function(){
             $(this).text("");
-            $(this).removeAttr("class"); //remove id (lesson) -> styling
-            // $(this).addClass("empty") //TODO: remove "empty" class from populate() and here
+            $(this).removeAttr("class");
+            $(this).addClass("empty");
         });  
         }
     });
 });
-
-/**returns the rowindex of the passed timespan which is used to push the lesson into the timetable*/
-// function getTimeTableIndex(starttime,endtime){
-//     for(var x in Scheme){        
-//         if(starttime.getHours() >= Scheme[x][0][0] && starttime.getMinutes() >= Scheme[x][0][1])
-//         {
-//             if( ((endtime.getHours() * 60 ) + endtime.getMinutes()) <= ((Scheme[x][1][0]*60) + Scheme[x][1][1])) //TODO: Check if working correctly - don't check for hours and mins individually, won't work if endtime < specified scheme endtime
-//             {
-//                 //console.log(`Index: ${x}`)
-//                 return x
-//             }
-//         }
-//     }
-//     alert("Stundendaten fehlerhaft!")
-//     console.warn("Lesson not in specified scheme.")
-// }
 
 function generateLessonArray(filename){
     if(events.length == 0){
@@ -350,8 +326,6 @@ function generateLessonArray(filename){
         let module_name = subject + Counter + semester_and_moduletype.charAt(1); //FIXME: CHECKBOX IDS
         
         let moduleAndteacher = module_name + "_" + teacher;
-
-        //console.log(`${weekday} ${duration}min ${subject} ${teacher}`)
         
         if(lessonsArray[semester] == undefined){
             lessonsArray[semester] = new Array;
@@ -367,11 +341,6 @@ function generateLessonArray(filename){
         } else {
             console.error("lesson uncomplete")
         }
-        //FIXME: if subject already booked ignore same subjects with other module_type!!!!
-        //TODO: ^^^^ in populate
-
-        // console.log(lessonsArray)
-        //lessonsArray.push(new lesson(subject,starttime,endtime,weekday,teacher));
     }
 
 }
@@ -395,20 +364,20 @@ const fetchFiles = (iterator) => {
                     
                 events = jcalData[2];
 
-                generateLessonArray(files[iterator]) //TODO: pass semester - split from filename
+                generateLessonArray(files[iterator])
                 
 
-                //console.log(`populating using ${files[iterator]}`)
-                //populate()
+                console.log(`reading ${files[iterator]}`)
+
                 ReactDOM.render(time_table, document.getElementById("timetable"));
                 
                 fetchFiles(iterator-1);
               };
 
         })
-    } else { //
-        RenderCheckboxes() //FIXME: -> RenderCheckbox Function
-    } //
+    } else {
+        RenderCheckboxes();
+    }
 }
 
 fetchFiles(files.length-1)    //load all files
@@ -420,8 +389,6 @@ function Mytable(props){
     items["rows"] = new Array;
     const colCount = props.headings.length //FIXME: seems odd -> throwing error if headings.length > rowCount (should be if row lesson amount (lesson[rowindex].length) < headings.length) (introduce new variable?)
     const rowCount = Object.keys(lessons).length
-    //console.log(colCount)
-
 
     items["headings"].push(<th>Stunde</th>) //Description of y-axis (leave empty?)
 
@@ -429,40 +396,25 @@ function Mytable(props){
         items["headings"].push(<th>{heading}</th>)  //add column title
     }
     
-    for(let row=0; row<rowCount; row++){ //HourCounter
+    for(let row=0; row<rowCount; row++){ //hour counter
         items["rows"][row] = new Array; //new array => new row
         if(row%2 == 0){
             items["rows"][row].push(<td className="rowInfo" rowSpan ="2">{(row/2)+1}.Stunde</td>) //FIXME: added rowspan - remove if not working
         }
     }
 
-    // let dataError = false;
-
     for(let row=0; row<rowCount; row++){
         for(let column=0; column < colCount; column++){
-            console.log(lessons[row])
-            console.log(lessons[row][column])
             
-            // if(lessons[row] == undefined || lessons[row][column] == undefined){
-            //     dataError = true;
-            //     continue
-            // }
             //TODO: Check if lessons[row-1][col] has rowspan2 in that case "continue"
-            if(lessons[row][column] != "" && lessons[row][column] !== undefined){ //TODO: Check if !== undefined is working as expected and if a missing entry in "lesson rows" disrupts "authenticity"
-                //console.log(lessons[column][row])
-                console.log("not empty")
+            if(lessons[row][column] != "" && lessons[row][column] !== undefined){
                 items["rows"][row].push(<td className="lesson">{lessons[row][column]}</td>) //Iterating over lessons (Mon 1h -> Tue 1h -> ... -> Mon 2h -> ..)
             }
             else{
-                console.log("empty")
                 items["rows"][row].push(<td className="empty">{lessons[row][column]}</td>) //adding another id (cell styling)
             }
         }
     }
-
-    // if(dataError){
-    //     alert("Stundenplan fehlerhaft!")
-    // }
     
     var tableData = items["rows"].map(function(obj) {
         return <tr>{obj}</tr>
@@ -483,7 +435,6 @@ function Mytable(props){
   )
 }
 
-//FIXME: use lesson objects
 function Checkboxtable(props){
     const rows = [];
 
@@ -495,22 +446,21 @@ function Checkboxtable(props){
 
     for(let subject of props.subjects){
         rows["headings"].push(<th className={subject}>{subject}</th>)
-        //console.log("push")
     }
     
     rows["rows"] = new Array()
     //console.log(props.subjects)
     //for(let row in ) //TODO: max array length (max Semester count)
-    for(let x=0;x<SemesterCount;x++){ //TODO: replace x with ^^^^^ && Check if column should include a checkbox or not
-        rows["rows"][x] = new Array();
-        rows["rows"][x].push(<td className="has-text-centered">{x+1}</td>)
+    for(let row=0;row<SemesterCount;row++){ //TODO: replace x with ^^^^^
+        rows["rows"][row] = new Array();
+        rows["rows"][row].push(<td className="has-text-centered">{row+1}</td>)
         
         for(let subject of props.subjects){
-            if(props.boxPositions[x].has((subject + (x+1)))){ //FIXME: This won't work if Semesterfiles are missing (x index not taking into account present files) 3P, 5P, 2S -> still searching for M1, M2, M3 etc.
+            if(props.boxPositions[row].has((subject + (row+1)))){ //FIXME: This won't work if Semesterfiles are missing (x index not taking into account present files) 3P, 5P, 2S -> still searching for M1, M2, M3 etc.
                 // rows["rows"][x].push(<td className="has-text-centered"><label className="checkbox"><input type="checkbox" id={subject + (x+1)}/></label></td>)
-                rows["rows"][x].push(<td className={"has-text-centered " + subject}><label className="checkbox"><input type="checkbox" id={subject + moduleCountDict[x+1][subject]}/></label></td>)
+                rows["rows"][row].push(<td className={"has-text-centered " + subject}><label className="checkbox"><input type="checkbox" id={subject + moduleCountDict[row+1][subject]}/></label></td>)
             } else {
-                rows["rows"][x].push(<td className={"has-text-centered " + subject} id="emptyField"></td>)
+                rows["rows"][row].push(<td className={"has-text-centered " + subject} id="emptyField"></td>)
             }
         }
     }
@@ -521,9 +471,6 @@ function Checkboxtable(props){
         return <tr>{obj}</tr>
         }
     )
-    //TODO: Get Semester of specific subject, ignore fully checked rows (=Semesterfile - when populating)
-
-    //for(subject.)???
 
     return (
         <React.Fragment>
@@ -541,8 +488,7 @@ function Checkboxtable(props){
 }
 
 var Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
-//var lessons = {'0':["A","L","GWK","GSP",""],'1':["B","D","L","GWK","GSP"],'2':["C","D","","GWK","GSP"],'3':["D","D","L","GWK",""],'4':["E","D","L","GWK",""],'5':["E","D","L","GWK","X"]}; // '0' Array -> 1. row
-var lessons = {'0':["","","","",""], '1':["","","","",""], '2':["","","","",""], '3':["","","","",""], '4':["","","","",""], '5':["","","","",""], '6':["","","","",""], '7':["","","","",""], '8':["","","","",""], '9':["","","","",""], '10':["","","","",""], '11':["","","","",""]}
+var lessons = {'0':["","","","",""], '1':["","","","",""], '2':["","","","",""], '3':["","","","",""], '4':["","","","",""], '5':["","","","",""], '6':["","","","",""], '7':["","","","",""], '8':["","","","",""], '9':["","","","",""], '10':["","","","",""], '11':["","","","",""]} // '0' Array -> 1. row
 var time_table = <Mytable headings={Days} lessons={lessons}/>;
 
 
@@ -558,24 +504,14 @@ function RenderCheckboxes(){
             subject = subject.split("_")[0] // splitting module name from module&teacher string
 
             subjectHeadings.add(subject.slice(0, -2))
-            // CheckboxArray[semester].add(subject.slice(0, -1)) //used for checkbox placement
-            CheckboxArray[semester].add(subject.slice(0, -2) + semester) //FIXME: counter not working correctly
+            CheckboxArray[semester].add(subject.slice(0, -2) + semester)
         }
     }
     
     CheckboxArray = CheckboxArray.flat() //Remove empty slots from Array
 
-    // for(let lesson of lessonsArray){
-    // allSubjects.add(lesson.subject) //TODO: R - blocked lessons?
-    //     //console.log(lesson.subject)
-    // }
-    console.log(subjectHeadings)
-    //TODO: use dictionary and store checkbox positions (row indices) in array
-    //TODO: check state of checkboxes http://jsfiddle.net/dY372/
     const checkbox_table = <Checkboxtable subjects={subjectHeadings} boxPositions={CheckboxArray}/>;
     ReactDOM.render(checkbox_table, document.getElementById("checkboxtable"));
-    
-    //fade element with id "loading" out over 5s
     
     checkboxIsRendered()
 }
@@ -586,15 +522,20 @@ function checkboxIsRendered(){
     
     //get all options of second-lang select
     var secondLangOptions = $("#second-lang option");
+
+    var beMeOptions = $("#be-me option"); //FIXME: var name
     
     //convert dom object to array
     const secondLangOptionArray = $.makeArray(secondLangOptions);
+    const beMeOptionArray = $.makeArray(beMeOptions); //FIXME: var name
     
     //hide all 2nd language checkboxes on page load
     secondLangOptionArray.forEach(subject => ChangeCheckboxVisibilityByClassName(subject.value, 'hide'))
+    beMeOptionArray.forEach(subject => ChangeCheckboxVisibilityByClassName(subject.value, 'hide'))
     
     //used to add Eventlistener to select
     let secondLangSelect = document.getElementById("second-lang")
+    let beMeSelect = document.getElementById("be-me") //FIXME: var name
 
     secondLangSelect.addEventListener("change", function(e){        
 
@@ -610,23 +551,23 @@ function checkboxIsRendered(){
     })
 
 
-    let doublebookingSelect = document.getElementById("double-book")
+    beMeSelect.addEventListener("change", function(e){
 
-    //TODO: either check that all selects are filled or use default values
-    doublebookingSelect.addEventListener("change", function(e){
-        //FIXME: replace with one line if statement
-        switch(e.target.value){
-            case "n":
-                doublebooking = false
-                break
-            case "y":
-                doublebooking = true
-                break
+        for(let i=0;i<beMeOptionArray.length;i++){
+            if(beMeOptionArray[i].value != e.target.value){
+                ChangeCheckboxVisibilityByClassName(beMeOptionArray[i].value, 'hide')
+            }
         }
+
+        ChangeCheckboxVisibilityByClassName(e.target.value, 'show')
     })
 
 
+    let doublebookingSelect = document.getElementById("double-book")
 
+    doublebookingSelect.addEventListener("change", function(e){
+        doublebooking = (e.target.value == "y");
+    })
 
     $("#loading").fadeOut(2000);
 
@@ -638,7 +579,6 @@ function checkboxIsRendered(){
         element = element.children[0]
 
         element.addEventListener('change', function(e){
-            //if element was checked
             if(element.checked){
                 console.log(e.target.id)
 
@@ -656,7 +596,6 @@ function checkboxIsRendered(){
 
 
 function ChangeCheckboxState(element, state){
-    //FIXME: change state of other language checkboxes back to checked
     try{
         element.firstChild.firstChild.checked = state;
     }
@@ -668,8 +607,6 @@ function ChangeCheckboxState(element, state){
 function ChangeCheckboxVisibilityByClassName(name, state){
     let elements = document.getElementsByClassName(name);
     let elementsArray = [...elements];
-
-    //TODO: take other options into account to hide other languages
 
     if(state == 'hide'){
         elementsArray.forEach( element => {

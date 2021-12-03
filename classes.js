@@ -9,8 +9,6 @@ class lesson{
         this.duration = duration;
         this.module_name_teacher = moduleAndteacher;
 
-        this.timetableindex = getTimeTableIndex(starttime,endtime)
-        
-        //FIXME: subject + name of ics File -> module name, this won't work for latein & französisch
+        this.timetableindex = getTimeTableIndex(starttime,endtime);
     }
 }
