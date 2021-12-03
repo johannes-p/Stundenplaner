@@ -54,6 +54,12 @@ body{
             background-color: rgba(80, 74, 74, 0.15);
 } */
 
+#checkboxtable{
+    border-radius: 10px;
+    border-style: hidden;
+    overflow: hidden;
+}
+
 #checkboxtable th:first-child{
   border-left: 1px solid #DBDBDB;
 }

@@ -1,25 +1,39 @@
-//TODO: Add / calculate hour count (individual + presence)
-//TODO: if full hour make cell span 2 rows
+//Necessary:
+//TODO: hide other 2nd languages if another one is selected
 
-//FIXME: when removing lessons and clicking populate, cells sometimes miss the lesson class (styling)
+//TODO: add select for ME/BE
 
-//FIXME: pressing populate a second time after removing lessons is broken
+//INF1 only in presence
+//ÖKO1 & 2 in same semester - TODO: check if Öko1 and just add two Checkboxes at first accourance (static Checkboxid)?
+// this will make problems when styling (two checkboxes in one cell) - maybe add two blocks in chell containing checkboxes
+//Check if Subject has two different Modules (e.g. 1 and 2 in one semester) and add two checkboxes in this case
+
+
+//Maybe?
 
 //TODO: if module not bookable, ignore all following modules of same type (beware of same subjects with different endings p,s,q,..) ???
 
-//TODO: restrict "id"-adding to checkboxes in checkboxtable!! - not necessary, only checkboxes on the site are in the checkboxtable
-//TODO: after populating check if row = row + 1 (/row = row-1) (only on even numbers) -> rowspan 2 and remove entry on row+1
 
-//TODO: Maybe add option to restrict timetable to certain times per day
+//Nice to have:
+
+//TODO: Use ical.js functionality instead of indexing to array values -> generateLessonArray()
+
+//TODO: Add / calculate hour count (individual + presence)
+
+//FIXME: when removing lessons and clicking populate, cells sometimes miss the lesson class (styling)
+// Can be ignored while populating is only allowed once ^^^
+//FIXME: pressing populate a second time after removing lessons is broken
 
 //TODO: on populate first remove all subjects from ignoreAP and reset checkbox colors in checkboxtable
 
+//TODO: restrict "id"-adding to checkboxes in checkboxtable!! - not necessary, only checkboxes on the site are in the checkboxtable
+
+//TODO: if full hour make cell span 2 rows - after populating check if row = row + 1 (/row = row-1) (only on even numbers) -> rowspan 2 and remove entry on row+1
+
+//TODO: Maybe add option to restrict timetable to certain times per day
 
 
-//INF1 only in presence
-//ÖKO1 & 2 in same semesterfile
-
-//DONE
+//DONE:
 //FIXME: SEMESTERS - Module Name ->> Count modules
 //FIXME: TODO: Use Module + Teacher while populating
 
@@ -95,24 +109,8 @@ function addCheckboxtoIgnoreArray(){ //FIXME: this might be broken later - consi
 
 function populate(){
 
-    //disable all checkboxes
-    $("input[type=checkbox]").each(function(){
-        this.disabled = true;
-    })
-
-    //disable all select
-    $("select").each(function(){
-        this.disabled = true;
-    })
-
-
-    //get element by id "start-btn"
-    var startBtn = document.getElementById("start-btn");
-    startBtn.innerHTML = "Seite neuladen";
-    //change button function to refresh page
-    startBtn.onclick = function() {
-        location.reload();
-    }
+    disableInputs();
+    changePopulateButtonBehaviour();
 
     // lessonsArray.shift() // removing empty slot FIXME: Not sure if necessary
     //TODO: Check if all lessons of subject fit, otherwise remove all lessons of that type
@@ -166,7 +164,7 @@ function populate(){
                                 lessons[lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name} ${lesson.teacher}`;
                             } else {
                                 //if 2nd half of lesson doesn't fit
-                                RemoveLessons(lesson);
+                                removeLessons(lesson);
                                 break
                             }
                         
@@ -181,7 +179,7 @@ function populate(){
                     else{
                         //complete subject doesn't fit in timetable
                         //remove all of "lesson" from timetable
-                        RemoveLessons(lesson);
+                        removeLessons(lesson);
                         break //leave loop to ignore remaining lessons of this module
                     }
                 } else {
@@ -196,7 +194,28 @@ function populate(){
     ReactDOM.render(time_table, document.getElementById("timetable"));
 }
 
-function RemoveLessons(lesson) {
+function disableInputs() {
+    $("input[type=checkbox]").each(function () {
+        this.disabled = true;
+    });
+
+    $("select").each(function () {
+        this.disabled = true;
+    });
+}
+
+function changePopulateButtonBehaviour() {
+    var startBtn = document.getElementById("start-btn");
+    startBtn.innerHTML = "Seite neuladen";
+    startBtn.className = "button is-danger";
+
+    //change button function to refresh page
+    startBtn.onclick = function () {
+        location.reload();
+    };
+}
+
+function removeLessons(lesson) {
     for (let rows in lessons) {
         for (let col in lessons[rows]) {
             if (lessons[rows][col] == `${lesson.module_name} ${lesson.teacher}`) {
@@ -319,7 +338,6 @@ function generateLessonArray(filename){
         let subject = events[index][1][4][3].split(" ").at(-1); // [-1] -> last element in array (getting subject from modulename)
         let weekday = weekdays[starttime.getDay()];
         let teacher = events[index][1][5][3];
-        //TODO: Use ical.js functionality instead of indexing to array values
         
 
         let semester_and_moduletype = filename.split("/")[filename.split("/").length - 1].split(".")[0] // filename.split.length equal -1 (last element of array)
@@ -564,22 +582,39 @@ function RenderCheckboxes(){
 
 /**Function that is called after the checkboxtable is rendered */
 function checkboxIsRendered(){
-    unsupportedSubjects.forEach(subject => ChangeVisibilityByClassName(subject, 'hide'))
-    languages.forEach(subject => ChangeVisibilityByClassName(subject, 'hide'))
+    unsupportedSubjects.forEach(subject => ChangeCheckboxVisibilityByClassName(subject, 'hide'))
     
+    //get all options of second-lang select
+    var secondLangOptions = $("#second-lang option");
+    
+    //convert dom object to array
+    const secondLangOptionArray = $.makeArray(secondLangOptions);
+    
+    //hide all 2nd language checkboxes on page load
+    secondLangOptionArray.forEach(subject => ChangeCheckboxVisibilityByClassName(subject.value, 'hide'))
+    
+    //used to add Eventlistener to select
     let secondLangSelect = document.getElementById("second-lang")
 
-    secondLangSelect.addEventListener("change", function(e){
-        //TODO: untick all checkboxes
-        ChangeVisibilityByClassName(e.target.value, 'show')
+    secondLangSelect.addEventListener("change", function(e){        
 
-        //TODO: hide all other languages
+        //hide all language checkboxes
+        for(let i=0;i<secondLangOptionArray.length;i++){
+            if(secondLangOptionArray[i].value != e.target.value){
+                ChangeCheckboxVisibilityByClassName(secondLangOptionArray[i].value, 'hide')
+            }
+        }
+
+        //unhide checkboxes of selected language
+        ChangeCheckboxVisibilityByClassName(e.target.value, 'show')
     })
+
 
     let doublebookingSelect = document.getElementById("double-book")
 
     //TODO: either check that all selects are filled or use default values
     doublebookingSelect.addEventListener("change", function(e){
+        //FIXME: replace with one line if statement
         switch(e.target.value){
             case "n":
                 doublebooking = false
@@ -630,13 +665,11 @@ function ChangeCheckboxState(element, state){
     }
 }
 
-//(un)hide all elements with specified class
-function ChangeVisibilityByClassName(name, state){
+function ChangeCheckboxVisibilityByClassName(name, state){
     let elements = document.getElementsByClassName(name);
     let elementsArray = [...elements];
 
-
-    //TODO: Tick boxes (=child) on hide, untick on show
+    //TODO: take other options into account to hide other languages
 
     if(state == 'hide'){
         elementsArray.forEach( element => {
