@@ -9,6 +9,8 @@ class lesson{
         this.duration = duration;
         this.module_name_teacher = moduleAndteacher;
 
+        this.moduleType = ""; //TODO:
+
         this.timetableindex = getTimeTableIndex(starttime,endtime);
     }
 }

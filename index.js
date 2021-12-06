@@ -1,5 +1,5 @@
 //Necessary:
-//TODO: hide other 2nd languages if another one is selected
+//TODO: Add timestamp "age" of .ics files
 
 //INF1 only in presence
 //ÖKO1 & 2 in same semester - TODO: check if Öko1 and just add two Checkboxes at first accourance (static Checkboxid)?
@@ -48,7 +48,7 @@ var files = ["./data/1S.ics","./data/1P.ics","./data/2S.ics","./data/3P.ics","./
 files = files.reverse()
 
 var unsupportedSubjects = ["R","Eth","ÖKO","INF"]
-var languages = ["L","F"]
+
 //TODO: add an array for languages and maybe one for ME/BE
 
 //TODO: hide ignored subjects
@@ -60,6 +60,7 @@ var ignoreCheckboxes = new Set();
 
 var moduleCountDict = {}
 var doublebooking = false // default value
+var studium = "fernstudium"; //value if not selected
 
 function hideAllIgnoredSubjects(column){
     var all_cols=document.getElementsByClassName(column)
@@ -70,7 +71,7 @@ function hideAllIgnoredSubjects(column){
     )
 }
 
-
+/** determines the module counter of a subject in the given semester */
 function getModuleCount(subject, semester){
  
     if(moduleCountDict[semester] == undefined){
@@ -99,10 +100,10 @@ function getModuleCount(subject, semester){
 }
 
 function addCheckboxtoIgnoreArray(){ //FIXME: this might be broken later - consider using a secon array/set
-    ignoreAP.clear() //TODO: to cycle through possible timetable combinations, this needs to be removed (adding removed lessons to ignoreAP)
+    // ignoreAP.clear() //TODO: to cycle through possible timetable combinations, this needs to be removed (adding removed lessons to ignoreAP)
     var idSelector = function() { return this.id; };
     var dontPopulate = $(":checkbox:checked").map(idSelector).get();
-    //TODO: remove all checkbox ids from outside of checkbox table and ignore checkboxes that can not be populated (R,..)
+    //TODO: remove all checkbox ids from outside of checkbox table
     dontPopulate.forEach(ignoreCheckboxes.add, ignoreCheckboxes);
 }
 
@@ -112,9 +113,6 @@ function populate(){
     changePopulateButtonBehaviour();
 
     // lessonsArray.shift() // removing empty slot FIXME: Not sure if necessary
-    //TODO: Check if all lessons of subject fit, otherwise remove all lessons of that type
-    // --> Check if lesson-teacher -> lesson count --> loop over lessons and count, maybe keep indices to remove the other lessons if they don't fit
-    //TODO: Maybe add Option to allow/disable double "booking" (2 Semesters of one subject at once)
     let lesson;
     addCheckboxtoIgnoreArray() //FIXME: add to another array
     for(let semester in lessonsArray){
@@ -182,7 +180,7 @@ function populate(){
                         break //leave loop to ignore remaining lessons of this module
                     }
                 } else {
-                    console.table(`skipping ${lesson.module_name} - already populated/attended`)
+                    console.table(`skipping ${lesson.module_name} - already populated or attended`)
                     break
                 }
             }
@@ -236,10 +234,7 @@ function styleCheckboxtable(){
     })
 }
 
-// const Scheme = [[[17,10],[17,55]] , [[17,55],[18,40]] , [[18,45],[19,30]] , [[19,30],[20,15]] , [[20,25],[21,10]] , [[21,10],[21,55]]]
-// const Scheme2 = [[[17,10],[17,32]] , [[17,32],[17,55]] , [[17,55],[18,17]] , [[18,17],[18,40]] , [[18,45],[19,7]] , [[19,7],[19,30]] , [[19,30],[0,0]] , [[20,25],[20,47]] , [[20,47],[21,10]]]
-
-const FullHourScheme = [["17:10","17:55"] , ["17:55","18:40"] , ["18:45","19:30"] , ["19:30","20:15"] , ["20:25","21:10"] , ["21:10","21:55"]]  //TODO: VVV
+const FullHourScheme = [["17:10","17:55"] , ["17:55","18:40"] , ["18:45","19:30"] , ["19:30","20:15"] , ["20:25","21:10"] , ["21:10","21:55"]]
 const HalfHourScheme = [["17:10","17:32"] , ["17:32","17:55"] , ["17:55","18:17"] , ["18:17","18:40"] , ["18:45","19:07"] , ["19:07","19:30"] , ["19:30","19:52"] , ["19:52","20:15"] , ["20:25","20:47"] , ["20:47","21:10"] , ["21:10","21:32"] , ["21:32","21:55"]]
 
 function getTimeTableIndex(starttime,endtime){
@@ -272,6 +267,7 @@ function getTimeTableIndex(starttime,endtime){
         }
     }
 }
+
 
 //removing lessons from timetable using jquery to get right clicked element
 $(document).ready(function(){
@@ -483,11 +479,10 @@ function Checkboxtable(props){
                 {tableData}
         </tbody>
         </React.Fragment>
-        //TODO: Add timestamp "age" of .ics files
   )
 }
 
-var Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
+const Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
 var lessons = {'0':["","","","",""], '1':["","","","",""], '2':["","","","",""], '3':["","","","",""], '4':["","","","",""], '5':["","","","",""], '6':["","","","",""], '7':["","","","",""], '8':["","","","",""], '9':["","","","",""], '10':["","","","",""], '11':["","","","",""]} // '0' Array -> 1. row
 var time_table = <Mytable headings={Days} lessons={lessons}/>;
 
@@ -512,14 +507,13 @@ function RenderCheckboxes(){
 
     const checkbox_table = <Checkboxtable subjects={subjectHeadings} boxPositions={CheckboxArray}/>;
     ReactDOM.render(checkbox_table, document.getElementById("checkboxtable"));
-    
     checkboxIsRendered()
 }
 
 /**Function that is called after the checkboxtable is rendered */
 function checkboxIsRendered(){
     unsupportedSubjects.forEach(subject => ChangeCheckboxVisibilityByClassName(subject, 'hide'))
-    
+
     //get all options of second-lang select
     var secondLangOptions = $("#second-lang option");
 
@@ -536,6 +530,7 @@ function checkboxIsRendered(){
     //used to add Eventlistener to select
     let secondLangSelect = document.getElementById("second-lang")
     let beMeSelect = document.getElementById("be-me") //FIXME: var name
+    let studytypeSelect = document.getElementById("studytype")
 
     secondLangSelect.addEventListener("change", function(e){        
 
@@ -561,6 +556,15 @@ function checkboxIsRendered(){
 
         ChangeCheckboxVisibilityByClassName(e.target.value, 'show')
     })
+
+    studytypeSelect.addEventListener("change", function(e){
+        if(e.target.value == "FS"){
+            studium = "fernstudium"
+        } else if(e.target.value == "PS"){
+            studium = "präsenzstudium"
+        }
+    })
+
 
 
     let doublebookingSelect = document.getElementById("double-book")

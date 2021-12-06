@@ -112,12 +112,12 @@
                 <div class="columns">
                     <div class="column">
                         <label class="label">Studienart</label>
-                        <div class="select">
+                        <div class="select" id="studytype">
                             <select required autocomplete="off"> 
                                 <option value="" disabled selected>Belegung wählen</option>
-                                <option>Fernstudium</option>
-                                <option>Präsenzstudium</option>
-                                <option>Präsenz + Fernstudium</option>
+                                <option value="FS">Fernstudium</option>
+                                <option value="PS">Präsenzstudium</option>
+                                <!-- <option>Präsenz + Fernstudium</option> -->
                                 <!-- Add mix, populating present first, then try to add..-->
                             </select>
                         </div>
