@@ -22,11 +22,6 @@ body{
         height: 100%;
     }
 
-/* #timetable td + td {
-    border-bottom: 0px;
-    border-top: 0px;
-} */
-
 #timetable{
     border-radius: 10px;
     border-style: hidden; /*to remove outer boarders*/
@@ -42,8 +37,21 @@ body{
     background: rgb(90, 209, 90);
 }
 
+/*vertically align text of td with class "rowInfo"*/
 .rowInfo{
-    vertical-align: middle;
+  height: 100px;
+  line-height: 100px;
+  text-align: center;
+}
+
+/*align "buttons" to the right*/
+.buttons{
+  float: right;
+}
+
+/*add margin <p> tags in "info-modal"*/
+.block p{
+  margin-bottom: 30px;
 }
 
 /* .empty{
@@ -55,6 +63,10 @@ body{
 } */
 
 #checkboxtable{
+  /*center horizontally*/
+    margin-left: auto;
+    margin-right: auto;
+
     border-radius: 10px;
     border-style: hidden;
     overflow: hidden;
@@ -84,7 +96,11 @@ body{
 } */
 
 #loading{ /*FIXME: on mobile (iPad setting) the loading icon is shifting when fading out*/
-    position: fixed;
+  /*center horizontally*/
+    margin-left: auto;
+    margin-right: auto;
+
+    position: relative;
     width: 100%;
     height: 100%;
     /* background: linear-gradient(to top right, cyan, pink 60%); */
@@ -93,7 +109,6 @@ body{
     left: 0;
     z-index: 99;
 }
-
 
 /*Pure CSS Loader*/
 .lds-default {

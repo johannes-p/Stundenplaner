@@ -1,5 +1,5 @@
 class lesson{
-    constructor(subject, starttime, endtime, weekday, teacher, module_name, duration, moduleAndteacher){
+    constructor(subject, starttime, endtime, weekday, teacher, module_name, duration, moduleAndteacher, moduleType){
         this.subject = subject;
         this.starttime = starttime;
         this.endtime = endtime;
@@ -9,7 +9,7 @@ class lesson{
         this.duration = duration;
         this.module_name_teacher = moduleAndteacher;
 
-        this.moduleType = ""; //TODO:
+        this.moduleType = moduleType;
 
         this.timetableindex = getTimeTableIndex(starttime,endtime);
     }

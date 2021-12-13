@@ -1,17 +1,7 @@
 //Necessary:
-//TODO: Add timestamp "age" of .ics files
+//TODO: Add timestamp "age" of .ics files9
 
-//INF1 only in presence
-//ÖKO1 & 2 in same semester - TODO: check if Öko1 and just add two Checkboxes at first accourance (static Checkboxid)?
-// this will make problems when styling (two checkboxes in one cell) - maybe add two blocks in chell containing checkboxes
-//Check if Subject has two different Modules (e.g. 1 and 2 in one semester) and add two checkboxes in this case
-
-//either check that all selects are filled or use default values
-
-//Maybe?
-
-//TODO: if module not bookable, ignore all following modules of same type (beware of same subjects with different endings p,s,q,..) ???
-
+//TODO: remove all later lessons if earlier lesson is removed from timetable
 
 //Nice to have:
 
@@ -32,35 +22,35 @@
 //TODO: Maybe add option to restrict timetable to certain times per day
 
 
-//DONE:
-//FIXME: SEMESTERS - Module Name ->> Count modules
-//FIXME: TODO: Use Module + Teacher while populating
-
-
 let events = []; //calendar events
 const weekdays = new Array("Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag")
 
 const lessonsArray = new Array;
 
-var files = ["./data/1S.ics","./data/1P.ics","./data/2S.ics","./data/3P.ics","./data/4S.ics","./data/5S.ics","./data/5P.ics","./data/6S.ics","./data/7S.ics","./data/7P.ics","./data/8S.ics"] // aufsteigend
+var files = ["./data/1A.ics","./data/1S.ics","./data/1P.ics","./data/2S.ics","./data/3P.ics","./data/4S.ics","./data/5S.ics","./data/5P.ics","./data/6S.ics","./data/7S.ics","./data/7P.ics","./data/8S.ics"] // aufsteigend
+
 
 //invert files array
 files = files.reverse()
 
-var unsupportedSubjects = ["R","Eth","ÖKO","INF"]
+//DAZ2 (- 2 is not the index) //SWa SWb ??? //"Darstellendes Spiel"
+var unsupportedSubjects = ["R","Eth","ÖKO","DAZ2","PBLT"] //ÖKO unsupported - no way of telling which module is 1 / 2 TODO: complete list
 
-//TODO: add an array for languages and maybe one for ME/BE
-
-//TODO: hide ignored subjects
+//TODO: allow booking of "R" or "Eth" in presence (remove from unsupportedSubjects - add selector for R/Eth)
 
 var ignoreAP = new Set(); //"already populated"
 var ignoreCheckboxes = new Set();
+var rejectedModules = new Set(); // set / array ? - FIXME: currently unused - add removed lessons (by left click on timetable) to rejectedModules
 
-//TODO: add removed lessons (by left click on timetable) to ignoreAP - to another array may be better
+var exceptionModules = ["INF1"] //Modules that are only provided in presence TODO: complete list
+//FIXME: VWA is only provided remote (?)
+
+
+var alertModules =  {"LPK1A":"Die Module LPK1A und LPK1B können nicht von höhersemestrigen Studierenden besucht werden. Als Alternative gibt es LPK1q und LPK1r.","LPK1B":"Die Module LPK1A und LPK1B können nicht von höhersemestrigen Studierenden besucht werden.  Als Alternative gibt es LPK1q und LPK1r."} //modules where special rules apply
 
 var moduleCountDict = {}
-var doublebooking = false // default value
-var studium = "fernstudium"; //value if not selected
+var doublebooking = false //default value
+var studium = "";
 
 function hideAllIgnoredSubjects(column){
     var all_cols=document.getElementsByClassName(column)
@@ -72,7 +62,7 @@ function hideAllIgnoredSubjects(column){
 }
 
 /** determines the module counter of a subject in the given semester */
-function getModuleCount(subject, semester){
+function getModuleCounter(subject, semester){
  
     if(moduleCountDict[semester] == undefined){
         moduleCountDict[semester] = {}
@@ -99,16 +89,69 @@ function getModuleCount(subject, semester){
     
 }
 
-function addCheckboxtoIgnoreArray(){ //FIXME: this might be broken later - consider using a secon array/set
-    // ignoreAP.clear() //TODO: to cycle through possible timetable combinations, this needs to be removed (adding removed lessons to ignoreAP)
+function getModuleType(semester_and_moduletype) {
+    let presence = ["a", "b", "c", "d", "e", "f"]
+    let remote = ["s", "t", "u", "p", "q", "r"]
+    let type = semester_and_moduletype.charAt(1).toLowerCase()
+
+    console.log(type)
+    //if type is in presence
+    if(presence.includes(type)){
+        return "presence"
+    }
+    //if type is in remote
+    else if(remote.includes(type)){
+        return "remote"
+    }
+    //if type is not in presence or remote
+    else{
+        console.error("unknown moduletype")
+    }
+}
+
+
+function addCheckboxtoIgnoreArray(){
     var idSelector = function() { return this.id; };
     var dontPopulate = $(":checkbox:checked").map(idSelector).get();
     //TODO: remove all checkbox ids from outside of checkbox table
     dontPopulate.forEach(ignoreCheckboxes.add, ignoreCheckboxes);
 }
 
-function populate(){
+function isEarlierSubjectBooked(lesson){
+    //get index of module
+    let index = lesson.module_name.charAt(lesson.module_name.length-2)
+    
+    //check if index is a number
+    if(isNaN(index)){
+        console.error("index is not a number")
+        //FIXME:
+        return false
+    }
+    
+    let lastIndex = index - 1
 
+    if(lastIndex == 0){
+        //on first occurance of module
+        return true
+    }
+
+    let lastModule = lesson.subject + lastIndex
+
+    if(ignoreAP.has(lastModule) || ignoreCheckboxes.has(lastModule)){
+        return true
+    } else {
+        return false
+    }
+}
+
+
+function populate(){
+    if(studium == ""){
+        alert("Bitte Studium auswählen")
+        return
+    }
+    
+    //TODO: check if all necessary variables are set (Studienart)
     disableInputs();
     changePopulateButtonBehaviour();
 
@@ -118,7 +161,7 @@ function populate(){
     for(let semester in lessonsArray){
         console.log(lessonsArray)
         //check if lessonsArray[semester] empty
-        // if(lessonsArray[semester].length == 0){ //FIXME: if continue -> code breaks
+        // if(lessonsArray[semester].length == 0){ //FIXME: if continue -> code breaks --- lessonArray[semester].length is always 0
         //     continue;
         // }
         for(let subjectindex in lessonsArray[semester]){
@@ -130,6 +173,11 @@ function populate(){
                     break
                 }
 
+                if(!isEarlierSubjectBooked(lesson)){
+                    console.warn(`earlier modules of ${lesson.module_name} not attended/booked - skipping`)
+                    break
+                }
+
                 //if doublebooking is set to false and subject is already in ignoreAP, skip
                 if(!doublebooking){
                     for(let subject of ignoreAP){
@@ -138,6 +186,19 @@ function populate(){
                             break lessonloop
                         }
                     }
+                }
+                
+                //check if lesson.moduleType matches studium
+                if(lesson.moduleType != studium){
+                    console.log(lesson.module_name.slice(0,-1))
+                    console.log(exceptionModules)
+                    console.log(lesson.module_name.slice(0,-1) in exceptionModules)
+                    
+                    if(!(exceptionModules.includes(lesson.module_name.slice(0,-1)))){ // not an exception module
+                        console.warn(`${lesson.module_name} is ignored - module study type does not match selected type`)
+                        continue //stay in lessonloop but skip this lesson
+                    }
+                    console.log(lesson.subject + " is an exception module")
                 }
 
 
@@ -228,8 +289,7 @@ function removeLessons(lesson) {
 function styleCheckboxtable(){
     console.log(ignoreAP)
     ignoreAP.forEach(module => {
-        console.log(module)
-        //style element with id module
+        //style element with id = module
         $("#" + module).parent().parent().css("background-color", "rgb(41, 196, 165, 0.5)"); //FIXME: add to css instead?
     })
 }
@@ -299,7 +359,7 @@ function generateLessonArray(filename){
         // alert("Keine Stunden gefunden!")
         // // let semester_and_moduletype = filename.split("/")[filename.split("/").length - 1].split(".")[0] // filename.split.length equal -1 (last element of array)
         // // let semester = semester_and_moduletype.charAt(0)
-        // // lessonsArray[semester] = new Array() //FIXME: empty array needed?
+        // // lessonsArray[semester] = new Array() //FIXME: empty array needed? might shift counter?
         return
     }
 
@@ -313,11 +373,11 @@ function generateLessonArray(filename){
         
 
         let semester_and_moduletype = filename.split("/")[filename.split("/").length - 1].split(".")[0] // filename.split.length equal -1 (last element of array)
-        //let moduletype = semester_and_moduletype.charAt(1)
+        let moduleType = getModuleType(semester_and_moduletype)
 
         let semester = semester_and_moduletype.charAt(0)
         
-        var Counter = getModuleCount(subject, semester)
+        var Counter = getModuleCounter(subject, semester)
         
         let module_name = subject + Counter + semester_and_moduletype.charAt(1); //FIXME: CHECKBOX IDS
         
@@ -333,7 +393,7 @@ function generateLessonArray(filename){
         }
 
         if(subject != undefined && starttime != undefined && endtime != undefined && weekday != undefined && teacher != undefined && module_name != undefined){
-            lessonsArray[semester][moduleAndteacher].push(new lesson(subject, starttime, endtime, weekday, teacher, module_name, duration, moduleAndteacher));
+            lessonsArray[semester][moduleAndteacher].push(new lesson(subject, starttime, endtime, weekday, teacher, module_name, duration, moduleAndteacher, moduleType));
         } else {
             console.error("lesson uncomplete")
         }
@@ -359,7 +419,7 @@ const fetchFiles = (iterator) => {
                 var jcalData = ICAL.parse(iCalendarData);
                     
                 events = jcalData[2];
-
+                
                 generateLessonArray(files[iterator])
                 
 
@@ -372,7 +432,7 @@ const fetchFiles = (iterator) => {
 
         })
     } else {
-        RenderCheckboxes();
+        filesRead();
     }
 }
 
@@ -431,87 +491,13 @@ function Mytable(props){
   )
 }
 
-function Checkboxtable(props){
-    const rows = [];
-
-    const SemesterCount = props.boxPositions.length;
-
-    rows["headings"] = new Array();
-
-    rows["headings"].push(<th>Semester</th>);
-
-    for(let subject of props.subjects){
-        rows["headings"].push(<th className={subject}>{subject}</th>)
-    }
-    
-    rows["rows"] = new Array()
-    //console.log(props.subjects)
-    //for(let row in ) //TODO: max array length (max Semester count)
-    for(let row=0;row<SemesterCount;row++){ //TODO: replace x with ^^^^^
-        rows["rows"][row] = new Array();
-        rows["rows"][row].push(<td className="has-text-centered">{row+1}</td>)
-        
-        for(let subject of props.subjects){
-            if(props.boxPositions[row].has((subject + (row+1)))){ //FIXME: This won't work if Semesterfiles are missing (x index not taking into account present files) 3P, 5P, 2S -> still searching for M1, M2, M3 etc.
-                // rows["rows"][x].push(<td className="has-text-centered"><label className="checkbox"><input type="checkbox" id={subject + (x+1)}/></label></td>)
-                rows["rows"][row].push(<td className={"has-text-centered " + subject}><label className="checkbox"><input type="checkbox" id={subject + moduleCountDict[row+1][subject]}/></label></td>)
-            } else {
-                rows["rows"][row].push(<td className={"has-text-centered " + subject} id="emptyField"></td>)
-            }
-        }
-    }
-    
-
-
-    var tableData = rows["rows"].map(function(obj) {
-        return <tr>{obj}</tr>
-        }
-    )
-
-    return (
-        <React.Fragment>
-        <thead>
-            <tr>
-                {rows["headings"]}
-            </tr>
-        </thead>
-        <tbody>
-                {tableData}
-        </tbody>
-        </React.Fragment>
-  )
-}
-
 const Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
 var lessons = {'0':["","","","",""], '1':["","","","",""], '2':["","","","",""], '3':["","","","",""], '4':["","","","",""], '5':["","","","",""], '6':["","","","",""], '7':["","","","",""], '8':["","","","",""], '9':["","","","",""], '10':["","","","",""], '11':["","","","",""]} // '0' Array -> 1. row
 var time_table = <Mytable headings={Days} lessons={lessons}/>;
 
 
-
-function RenderCheckboxes(){
-    var subjectHeadings = new Set()
-    let CheckboxArray = new Array()
-
-    for(let semester in lessonsArray){
-        CheckboxArray[semester] = new Set()
-        for(let subject in lessonsArray[semester]){
-
-            subject = subject.split("_")[0] // splitting module name from module&teacher string
-
-            subjectHeadings.add(subject.slice(0, -2))
-            CheckboxArray[semester].add(subject.slice(0, -2) + semester)
-        }
-    }
-    
-    CheckboxArray = CheckboxArray.flat() //Remove empty slots from Array
-
-    const checkbox_table = <Checkboxtable subjects={subjectHeadings} boxPositions={CheckboxArray}/>;
-    ReactDOM.render(checkbox_table, document.getElementById("checkboxtable"));
-    checkboxIsRendered()
-}
-
 /**Function that is called after the checkboxtable is rendered */
-function checkboxIsRendered(){
+function filesRead(){
     unsupportedSubjects.forEach(subject => ChangeCheckboxVisibilityByClassName(subject, 'hide'))
 
     //get all options of second-lang select
@@ -558,10 +544,12 @@ function checkboxIsRendered(){
     })
 
     studytypeSelect.addEventListener("change", function(e){
+        //TODO: change visibility of R/Eth select - which change visibility of checkboxes
         if(e.target.value == "FS"){
-            studium = "fernstudium"
+            studium = "remote"
+            //TODO: reset R/Eth select - check all R&Eth checkboxes and hide them
         } else if(e.target.value == "PS"){
-            studium = "präsenzstudium"
+            studium = "presence"
         }
     })
 
@@ -598,7 +586,6 @@ function checkboxIsRendered(){
     })
 }
 
-
 function ChangeCheckboxState(element, state){
     try{
         element.firstChild.firstChild.checked = state;
@@ -624,3 +611,15 @@ function ChangeCheckboxVisibilityByClassName(name, state){
         })
     }
 }
+
+function openInfoModal(){
+    //add "is-active" class to div with id "info-modal"
+    document.getElementById("info-modal").classList.add("is-active");   
+}
+
+//close modal (click modal background)
+document.getElementById("info-modal").addEventListener("click", function(e){
+    if(e.target.classList.contains("modal-background")){
+        document.getElementById("info-modal").classList.remove("is-active");
+    }
+})

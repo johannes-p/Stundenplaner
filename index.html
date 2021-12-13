@@ -1,184 +1,458 @@
 <!DOCTYPE html>
 
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="main.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="main.css">
+    <!-- TODO: fallbacks <link rel="stylesheet" href="cdn.css" onerror="this.onerror=null;this.href='local.css';" /> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 
 <!-- <body oncontextmenu="return false;"> -->
+
 <body>
-<div id="loading">
-    <div class="lds-default"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-</div>
 
-<div class="container">
-    <div class="columns">
-        <div class="column">
-            <table id="timetable" class="table is-bordered is-fullwidth">
-                <!-- <tr>
-                    <th>Stunde</th>
-                    <th>Montag</th>
-                    <th>Dienstag</th>
-                    <th>Mittwoch</th>
-                    <th>Donnerstag</th>
-                    <th>Freitag</th>
-                </tr>
-                <tr>
-                    <th>17:10-17:55</th>
-                    <td>1.Stunde Montag</td>
-                    <td>1.Stunde Dienstag</td>
-                    <td>1.Stunde Mittwoch</td>
-                    <td>1.Stunde Donnerstag</td>
-                    <td>1.Stunde Freitag</td>
-                </tr>
-                <tr>
-                    <th>17:55-18:40</th>
-                    <td>2.Stunde Montag</td>
-                    <td>2.Stunde Dienstag</td>
-                    <td>2.Stunde Mittwoch</td>
-                    <td>2.Stunde Donnerstag</td>
-                    <td>2.Stunde Freitag</td>
-                </tr>
-                <tr>
-                    <td>5 Minuten Pause</td>
-                </tr>
-                <tr>
-                    <th>18:45-19:30</th>
-                    <td>3.Stunde Montag</td>
-                    <td>3.Stunde Dienstag</td>
-                    <td>3.Stunde Mittwoch</td>
-                    <td>3.Stunde Donnerstag</td>
-                    <td>3.Stunde Freitag</td>
-                </tr>
-                <tr>
-                    <th>19:30-20:15</th>
-                    <td>4.Stunde Montag</td>
-                    <td>4.Stunde Dienstag</td>
-                    <td>4.Stunde Mittwoch</td>
-                    <td>4.Stunde Donnerstag</td>
-                    <td>4.Stunde Freitag</td>
-                </tr>
-                <tr>
-                    <td>10 Minuten Pause</td>
-                </tr>
-                <tr>
-                    <th>20:25-21:10</th>
-                    <td>5.Stunde Montag</td>
-                    <td>5.Stunde Dienstag</td>
-                    <td>5.Stunde Mittwoch</td>
-                    <td>5.Stunde Donnerstag</td>
-                    <td>5.Stunde Freitag</td>
-                </tr>
-                <tr>
-                    <th>21:10-21:55</th>
-                    <td>6.Stunde Montag</td>
-                    <td>6.Stunde Dienstag</td>
-                    <td>6.Stunde Mittwoch</td>
-                    <td>6.Stunde Donnerstag</td>
-                    <td>6.Stunde Freitag</td>
-                </tr> -->
-            </table>
-        </div>
 
-        <div class="column">
-            <div class="box">
-                <h1 class="title">Was wurde bereits besucht?</h1>
-                <table class="table" id="checkboxtable">
-                    <tr>
-                        <th>Semester</th>
-                        <th>Fach1</th>
-                        <th>Fach2</th>
-                    </tr>
-                    <tr>
-                        <th class="has-text-centered">1</th>
-                        <td class="has-text-centered">
-                            <label class="checkbox">
-                                <input type="checkbox">
-                            </label>
-                        </td>
-                        <td class="has-text-centered">
-                            <label class="checkbox">
-                                <input type="checkbox">
-                            </label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="has-text-centered">2</th>
-                    </tr>
-                    </table>
-                </table>
-                <div class="columns">
-                    <div class="column">
-                        <label class="label">Studienart</label>
-                        <div class="select" id="studytype">
-                            <select required autocomplete="off"> 
-                                <option value="" disabled selected>Belegung wählen</option>
-                                <option value="FS">Fernstudium</option>
-                                <option value="PS">Präsenzstudium</option>
-                                <!-- <option>Präsenz + Fernstudium</option> -->
-                                <!-- Add mix, populating present first, then try to add..-->
-                            </select>
-                        </div>
-                    </div>
-                    <div class="column">
-                        <label class="label">2. Fremdsprache</label>
-                        <div class="select" id="second-lang">
-                            <select required autocomplete="off"> 
-                                <option value="" disabled selected>Sprache wählen</option>
-                                <option value="L">Latein</option>
-                                <option value="F">Französisch</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="column">
-                        <label class="label">BE/ME</label>
-                        <div class="select" id="be-me">
-                            <select required autocomplete="off"> 
-                                <option value="" disabled selected></option>
-                                <option value="BE">Bildnerische Erziehung</option>
-                                <option value="ME">Musik Erziehung</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="column">
-                        <label class="label">Fächer mehrfach belegen</label>
-                        <div class="select" id="double-book">
-                            <select required autocomplete="off"> 
-                                <option value="n">Nein</option>
-                                <option value="y">Ja</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="columns">
-                    <div class="column">
-                        <div class="buttons">
-                            <!--Add button with on click function populate()-->
-                            <button id="start-btn" class="button is-primary" onclick="populate()">Bestätigen</button>
-                            <!-- <button class="button is-success"></button> -->
-                            <button class="button is-info">Info</button>
-                        </div>
-                    </div>
-                    <div class="column">
-                        <b>Stundenplandaten: Wintersemester-XY</b>
-                    </div>
-                </div>        
-            </div>
+    <div id="loading">
+        <div class="lds-default">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
         </div>
     </div>
 
-</div>
+    <div id="info-modal" class="modal  is-active"> <!--TODO: Remove is-active (maybe keep it so it gets displayed when the site is loaded and users don't have to klick the Info button) -->
+        <div class="modal-background" style="background-color: rgba(36, 88, 95, 0.356);"></div>
+        <div class="modal-content">
+                <div class="box">
+                    <h1 class="title">INFO</h1>
+                    <h1 class="subtitle">(Klicke außerhalb dieses Fensters um es zu schließen)</h1>
+                    <!-- Any other Bulma elements -->
+                        <div class="block">
+                            <div class="box" style="background-color: #f08eeba6;">
+                                <h1 class="subtitle">Verwendung der Seite</h1>
+                                <p>Im Block auf der linken Seite befinden sich alle wichtigen Eingabeelemente.<br><b>Wähle zuerst den gewünschten Modultyp.</b></p>
+                                    <div class="content">
+                                        <ul>
+                                            <li><b>Fernstudium:</b> Es wird lediglich die Hälfte der Unterrichtseinheiten in der Schule abgehalten. Die andere Hälfte erfolgt im Selbststudium.</li>
+                                            <li><b>Präsenzstudium:</b> Der gesamte Unterricht findet in der Schule statt.</li>
+                                        </ul>
+                                    </div>
+                                <p><b>Wähle die gewünschte Fremdsprache.</b><br>Wenn keine Fremdsprache gewählt wird, wird auch nicht versucht eine Fremdsprache zu buchen.</p>                        
+                                <p><b>Wähle ein Wahlpflichtfach.</b><br>Wenn keine Auswahl getroffen wird, wird auch nicht versucht eines dieser Fächer zu buchen.</p>
+                                <p><b>Wähle nun alle bereits von dir besuchten Fächer in der Tabelle an.</b><br>Tipp: Klicke auf das zuletzt besuchte Semester eines Fachs, um alle vorherigen Semester automatisch auszuwählen.</p>
+                                <p><b>Zum Schluss ist noch zu entscheiden, ob mehrere Module des selben Typs auf einmal gebucht werden sollen.</b><br>Also zum Beispiel M1 & M2 in einem Semester</p>
+                            </div>
 
-<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-<script type="text/javascript" src="https://unpkg.com/ical.js"></script>
-<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
 
-<script type = "text/babel" src="index.js"></script>
-<script src = "classes.js"></script>
+                            <div class="box" style="background-color: #e7393093;">
+                                <h1 class="subtitle">Limitierungen</h1>
+                                <p><b>Folgende Fächer können vom Programm nicht auf Buchbarkeit geprüft werden.</b></p>
+                            
+                                <div class="content">
+                                    <ul>
+                                        <li>Fernstudium: </li>
+                                        <li>Präsenzunterricht: </li>
+                                    </ul>
+                                </div>
+                        
+                            </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="columns">
+
+            <div class="column">
+                <div class="box">
+
+
+                    <div class="Inputs columns">
+                        <div class="column">
+                            <label class="label">Studienart</label>
+                            <div class="select" id="studytype">
+                                <select required autocomplete="off">
+                                    <option value="" disabled selected>Belegung wählen</option>
+                                    <option value="FS">Fernstudium</option>
+                                    <option value="PS">Präsenzstudium</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <label class="label">2. Fremdsprache</label>
+                            <div class="select" id="second-lang">
+                                <select required autocomplete="off">
+                                    <option value="" disabled selected>Sprache wählen</option>
+                                    <option value="L">Latein</option>
+                                    <option value="F">Französisch</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <label class="label">Wahlpflichtfach</label>
+                            <div class="select" id="be-me">
+                                <select required autocomplete="off">
+                                    <option value="" disabled selected>Wahlpflichtfach wählen</option>
+                                    <option value="BE">Bildnerische Erziehung</option>
+                                    <option value="ME">Musikerziehung</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h1 class="title">Was wurde bereits besucht?</h1>
+                    <table class="table" id="checkboxtable">
+                        <thead>
+                            <tr>
+                                <th>Semester</th>
+                                <th class="R">R</th>
+                                <th class="D">D</th>
+                                <th class="E">E</th>
+                                <th class="L">L</th>
+                                <th class="F">F</th>
+                                <th class="GSP">GSP</th>
+                                <th class="GWK">GWK</th>
+                                <th class="M">M</th>
+                                <th class="Eth">Eth</th>
+                                <th class="BU">BU</th>
+                                <th class="CH">CH</th>
+                                <th class="PH">PH</th> <!-- FIXME: missing a checkbox - add and adjust ids-->
+                                <th class="PP">PP</th>
+                                <th class="INF">INF</th> <!-- Add Exception for INF1 in index.js-->
+                                <th class="BE">BE</th>
+                                <th class="ME">ME</th>
+                                <th class="ÖKO">ÖKO</th>
+                                <th class="LPK">LPK</th> <!--LPK1a/b only available for new students(?) - display warning-->
+                                <th class="VWA">VWA</th> <!--Exception Module?-->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="has-text-centered">1</td>
+                                <td class="has-text-centered R"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="R1"></label></td>
+
+                                <td class="has-text-centered D"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="D1"></label></td>
+                                
+                                <td class="has-text-centered E"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="E1"></label></td>
+
+                                <td class="has-text-centered L" id="emptyField"></td>
+                                <td class="has-text-centered F" id="emptyField"></td>
+
+                                <td class="has-text-centered GSP"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                    id="GSP1"></label></td>
+
+                                <td class="has-text-centered GWK"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="GWK1"></label></td>
+
+                                <td class="has-text-centered M"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="M1"></label></td>
+                                 
+                                <td class="has-text-centered Eth"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="Eth1"></label></td>
+                                
+                                <td class="has-text-centered BU" id="emptyField"></td>
+                                <td class="has-text-centered CH" id="emptyField"></td>
+                                <td class="has-text-centered PH" id="emptyField"></td>
+                                <td class="has-text-centered PP" id="emptyField"></td>
+                                <td class="has-text-centered INF"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                    id="INF1"></label></td>
+                                <td class="has-text-centered BE" id="emptyField"></td>
+                                <td class="has-text-centered ME" id="emptyField"></td>
+                                <td class="has-text-centered ÖKO" id="emptyField"></td>
+                                <td class="has-text-centered LPK" id="emptyField"></td>
+                                <td class="has-text-centered VWA" id="emptyField"></td>
+                            </tr>
+                            <tr>
+                                <td class="has-text-centered">2</td>
+                                <td class="has-text-centered R"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="R2"></label></td>
+                                <td class="has-text-centered D"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="D2"></label></td>
+                                <td class="has-text-centered E"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="E2"></label></td>
+                                <td class="has-text-centered L"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="L1"></label></td>
+                                <td class="has-text-centered F"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="F1"></label></td> 
+                                <td class="has-text-centered GSP"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="GSP2"></label></td>
+                                <td class="has-text-centered GWK"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="GWK2"></label></td>
+                                <td class="has-text-centered M"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="M2"></label></td>
+                                <td class="has-text-centered Eth" id="emptyField"></td>
+                                <td class="has-text-centered BU" id="emptyField"></td>
+                                <td class="has-text-centered CH" id="emptyField"></td>
+                                <td class="has-text-centered PH" id="emptyField"></td>
+                                <td class="has-text-centered PP" id="emptyField"></td>
+                                <td class="has-text-centered INF" id="emptyField"></td>
+                                <td class="has-text-centered BE" id="emptyField"></td>
+                                <td class="has-text-centered ME" id="emptyField"></td>
+                                <td class="has-text-centered ÖKO" id="emptyField"></td>
+                                <td class="has-text-centered LPK" id="emptyField"></td>
+                                <td class="has-text-centered VWA" id="emptyField"></td>
+                                
+                            </tr>
+                            <tr>
+                                <td class="has-text-centered">3</td>
+                                <td class="has-text-centered R" id="emptyField"></td>
+                                <td class="has-text-centered D"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="D3"></label></td>
+                                <td class="has-text-centered E"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="E3"></label></td>
+                                <td class="has-text-centered L"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="L2"></label></td>
+                                <td class="has-text-centered F"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="F2"></label></td>
+                                <td class="has-text-centered GSP"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="GSP3"></label></td>
+                                <td class="has-text-centered GWK" id="emptyField"></td>
+                                <td class="has-text-centered M"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="M3"></label></td>
+                                <td class="has-text-centered Eth" id="emptyField"></td>
+                                
+                                <td class="has-text-centered BU"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="BU1"></label></td>
+                                <td class="has-text-centered CH" id="emptyField"></td>
+                                <td class="has-text-centered PH" id="emptyField"></td>
+                                <td class="has-text-centered PP" id="emptyField"></td>
+                                <td class="has-text-centered INF" id="emptyField"></td>
+                                <td class="has-text-centered BE" id="emptyField"></td>
+                                <td class="has-text-centered ME" id="emptyField"></td>
+                                <td class="has-text-centered ÖKO" id="emptyField"></td>
+                                <td class="has-text-centered LPK" id="emptyField"></td>
+                                <td class="has-text-centered VWA" id="emptyField"></td>
+                            </tr>
+                            <tr>
+                                <td class="has-text-centered">4</td>
+                                <td class="has-text-centered R"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="R3"></label></td>
+                                <td class="has-text-centered D"><label class="checkbox"><input autocomplete="off" 
+                                            type="checkbox" id="D4"></label></td>
+
+                                <td class="has-text-centered E"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="E4"></label></td>
+                                <td class="has-text-centered L"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="L3"></label></td>
+                                <td class="has-text-centered F"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="F3"></label></td>
+                                <td class="has-text-centered GSP" id="emptyField"></td>
+                                <td class="has-text-centered GWK" id="emptyField"></td>
+                                <td class="has-text-centered M"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="M4"></label></td>                               
+                                
+                                <td class="has-text-centered Eth" id="emptyField"></td>
+                                
+                                <td class="has-text-centered BU"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="BU2"></label></td>
+                                <td class="has-text-centered CH"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="CH1"></label></td>
+                                <td class="has-text-centered PH"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="PH1"></label></td>
+                                <td class="has-text-centered PP" id="emptyField"></td>
+                                <td class="has-text-centered INF" id="emptyField"></td>
+                                <td class="has-text-centered BE" id="emptyField"></td>
+                                <td class="has-text-centered ME" id="emptyField"></td>
+                                <td class="has-text-centered ÖKO" id="emptyField"></td>
+                                <td class="has-text-centered LPK" id="emptyField"></td>
+                                <td class="has-text-centered VWA" id="emptyField"></td>
+                            </tr>
+                            <tr>
+                                <td class="has-text-centered">5</td>
+                                <td class="has-text-centered R"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="R4"></label></td>
+                                <td class="has-text-centered D"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="D5"></label></td>
+                                <td class="has-text-centered E"><label class="checkbox"><input autocomplete="off" 
+                                            type="checkbox" id="E5"></label></td>
+                                <td class="has-text-centered L"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="L4"></label></td>
+                                <td class="has-text-centered F"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="F4"></label></td>
+                                <td class="has-text-centered GSP" id="emptyField"></td>
+                                <td class="has-text-centered GWK" id="emptyField"></td>
+                                <td class="has-text-centered M"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="M5"></label></td>
+                                
+                                <td class="has-text-centered Eth" id="emptyField"></td>
+                                
+                                <td class="has-text-centered BU" id="emptyField"></td>
+                                <td class="has-text-centered CH"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="CH2"></label></td>
+                                <td class="has-text-centered PH"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="PH2"></label></td>
+                                <td class="has-text-centered PP" id="emptyField"></td>
+                                <td class="has-text-centered INF" id="emptyField"></td>
+                                <td class="has-text-centered BE" id="emptyField"></td>
+                                <td class="has-text-centered ME" id="emptyField"></td>
+                                <td class="has-text-centered ÖKO" id="emptyField"></td>
+                                <td class="has-text-centered LPK" id="emptyField"></td>
+                                <td class="has-text-centered VWA" id="emptyField"></td>
+                            </tr>
+                            <tr>
+                                <td class="has-text-centered">6</td>
+                                <td class="has-text-centered R" id="emptyField"></td>
+                                <td class="has-text-centered D"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="D6"></label></td>
+                                
+                                
+                                <td class="has-text-centered E"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="E6"></label></td>
+                                <td class="has-text-centered L"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="L5"></label></td>
+                                <td class="has-text-centered F"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="F5"></label></td>
+                                <td class="has-text-centered GSP" id="emptyField"></td>
+                                <td class="has-text-centered GWK" id="emptyField"></td>
+                                <td class="has-text-centered M"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="M6"></label></td>
+                                
+                                <td class="has-text-centered Eth" id="emptyField"></td>
+                                
+                                
+                                <td class="has-text-centered BU" id="emptyField"></td>
+                                <td class="has-text-centered CH" id="emptyField"></td>
+                                <td class="has-text-centered PH"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="PH3"></label></td>
+                                <td class="has-text-centered PP"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="PP1"></label></td>
+                                
+                                <td class="has-text-centered INF" id="emptyField"></td>
+                                <td class="has-text-centered BE" id="emptyField"></td>
+                                <td class="has-text-centered ME" id="emptyField"></td>
+                                <td class="has-text-centered ÖKO" id="emptyField"></td>
+                                <td class="has-text-centered LPK" id="emptyField"></td>
+                                <td class="has-text-centered VWA" id="emptyField"></td>
+                            </tr>
+                            <tr>
+                                <td class="has-text-centered">7</td>
+                                <td class="has-text-centered R" id="emptyField"></td>
+                                <td class="has-text-centered D"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="D7"></label></td>
+                                <td class="has-text-centered E"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="E7"></label></td>
+
+                                <td class="has-text-centered L" id="emptyField"></td>
+                                <td class="has-text-centered F" id="emptyField"></td>
+                                <td class="has-text-centered GSP" id="emptyField"></td>
+                                <td class="has-text-centered GWK" id="emptyField"></td>
+                                
+                                <td class="has-text-centered M"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="M7"></label></td>
+                                
+                                
+                                
+                                <td class="has-text-centered Eth" id="emptyField"></td>
+                                
+                                <td class="has-text-centered BU" id="emptyField"></td>
+                                <td class="has-text-centered CH" id="emptyField"></td>
+                                <td class="has-text-centered PH" id="emptyField"></td>
+                                <td class="has-text-centered PP"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="PP2"></label></td>
+                                <td class="has-text-centered INF"><label class="checkbox"><input autocomplete="off" type="checkbox" 
+                                            id="INF2"></label></td>
+                                <td class="has-text-centered BE"><label class="checkbox"><input autocomplete="off" type="checkbox" 
+                                            id="BE1"></label></td>
+                                <td class="has-text-centered ME"><label class="checkbox"><input autocomplete="off" type="checkbox" 
+                                            id="ME1"></label></td>
+                                <td class="has-text-centered ÖKO"><label class="checkbox"><input autocomplete="off" type="checkbox" 
+                                            id="ÖKO1"></label></td>
+                                            <td class="has-text-centered LPK" id="emptyField"></td>
+                                            <td class="has-text-centered VWA" id="emptyField"></td>
+                            </tr>
+                            <tr>
+                                <td class="has-text-centered">8</td>
+                                <td class="has-text-centered R" id="emptyField"></td>
+                                <td class="has-text-centered D"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="D8"></label></td>
+                                <td class="has-text-centered E"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="E8"></label></td>
+                                <td class="has-text-centered L" id="emptyField"></td>
+                                <td class="has-text-centered F" id="emptyField"></td>
+                                <td class="has-text-centered GSP" id="emptyField"></td>
+                                <td class="has-text-centered GWK" id="emptyField"></td>
+                                <td class="has-text-centered M"><label class="checkbox"><input autocomplete="off" type="checkbox"
+                                            id="M8"></label></td>
+                                <td class="has-text-centered Eth" id="emptyField"></td>
+                                
+                                <td class="has-text-centered BU" id="emptyField"></td>
+                                <td class="has-text-centered CH" id="emptyField"></td>
+                                <td class="has-text-centered PH" id="emptyField"></td>
+                                <td class="has-text-centered PP" id="emptyField"></td>
+                                <td class="has-text-centered INF"><label class="checkbox"><input autocomplete="off"
+                                            type="checkbox" id="INF3"></label></td>
+                                <td class="has-text-centered BE" id="emptyField"></td>
+                                <td class="has-text-centered ME" id="emptyField"></td>
+                                <td class="has-text-centered ÖKO"><label class="checkbox"><input autocomplete="off"
+                                    type="checkbox" id="ÖKO2"></label></td>
+                                    <td class="has-text-centered LPK" id="emptyField"></td>
+                                    <td class="has-text-centered VWA" id="emptyField"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="columns"> <!--TODO: Remove columns?-->
+                        <div class="column">
+                            <label class="label">Fächer mehrfach belegen</label>
+                            <div class="select" id="double-book">
+                                <select required autocomplete="off">
+                                    <option value="n">Nein</option>
+                                    <option value="y">Ja</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <div class="columns">
+
+                        <div class="column">
+                            <b>Stundenplandaten: Wintersemester-XY</b>
+                        </div>
+
+                        <div class="column">
+                            <div class="buttons">
+                                <!-- <button class="button is-success"></button> -->
+                                <button class="button is-info" onclick="openInfoModal()">Info</button>
+                                <!--Add button with on click function populate()-->
+                                <button id="start-btn" class="button is-primary"
+                                    onclick="populate()">Bestätigen</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <table id="timetable" class="table is-bordered is-fullwidth">
+                    <!--dynamic content-->
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script type="text/javascript" src="https://unpkg.com/ical.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+
+    <script type="text/babel" src="index.js"></script>
+    <script src="classes.js"></script>
 </body>
-
-
