@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 
 <head>
+    <meta name="googlebot" content="noindex" />
+    <meta name="robots" content="noindex" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="main.css">
     <!-- TODO: fallbacks <link rel="stylesheet" href="cdn.css" onerror="this.onerror=null;this.href='local.css';" /> -->
@@ -36,7 +39,6 @@
                 <div class="box">
                     <h1 class="title">INFO</h1>
                     <h1 class="subtitle">(Klicke außerhalb dieses Fensters um es zu schließen)</h1>
-                    <!-- Any other Bulma elements -->
                         <div class="block">
                             <div class="box" style="background-color: #f08eeba6;">
                                 <h1 class="subtitle">Verwendung der Seite</h1>
@@ -129,14 +131,14 @@
                                 <th class="Eth">Eth</th>
                                 <th class="BU">BU</th>
                                 <th class="CH">CH</th>
-                                <th class="PH">PH</th> <!-- FIXME: missing a checkbox - add and adjust ids-->
+                                <th class="PH">PH</th>
                                 <th class="PP">PP</th>
-                                <th class="INF">INF</th> <!-- Add Exception for INF1 in index.js-->
+                                <th class="INF">INF</th>
                                 <th class="BE">BE</th>
                                 <th class="ME">ME</th>
                                 <th class="ÖKO">ÖKO</th>
-                                <th class="LPK">LPK</th> <!--LPK1a/b only available for new students(?) - display warning-->
-                                <th class="VWA">VWA</th> <!--Exception Module?-->
+                                <th class="LPK">LPK</th>
+                                <th class="VWA">VWA</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -427,9 +429,7 @@
 
                         <div class="column">
                             <div class="buttons">
-                                <!-- <button class="button is-success"></button> -->
                                 <button class="button is-info" onclick="openInfoModal()">Info</button>
-                                <!--Add button with on click function populate()-->
                                 <button id="start-btn" class="button is-primary"
                                     onclick="populate()">Bestätigen</button>
                             </div>

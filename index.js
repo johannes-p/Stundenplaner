@@ -3,6 +3,8 @@
 
 //TODO: remove all later lessons if earlier lesson is removed from timetable
 
+// ME / BE seem to have two types of modules - WIKU / ..
+
 //Nice to have:
 
 //TODO: Use ical.js functionality instead of indexing to array values -> generateLessonArray()
@@ -15,12 +17,7 @@
 
 //TODO: on populate first remove all subjects from ignoreAP and reset checkbox colors in checkboxtable
 
-//TODO: restrict "id"-adding to checkboxes in checkboxtable!! - not necessary, only checkboxes on the site are in the checkboxtable
-
 //TODO: if full hour make cell span 2 rows - after populating check if row = row + 1 (/row = row-1) (only on even numbers) -> rowspan 2 and remove entry on row+1
-
-//TODO: Maybe add option to restrict timetable to certain times per day
-
 
 let events = []; //calendar events
 const weekdays = new Array("Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag")
@@ -33,7 +30,7 @@ var files = ["./data/1A.ics","./data/1S.ics","./data/1P.ics","./data/2S.ics","./
 //invert files array
 files = files.reverse()
 
-//DAZ2 (- 2 is not the index) //SWa SWb ??? //"Darstellendes Spiel"
+//DAZ2 (- 2 is not the index) (Freifach?) //SWa SWb ??? //"Darstellendes Spiel"
 var unsupportedSubjects = ["R","Eth","ÖKO","DAZ2","PBLT"] //ÖKO unsupported - no way of telling which module is 1 / 2 TODO: complete list
 
 //TODO: allow booking of "R" or "Eth" in presence (remove from unsupportedSubjects - add selector for R/Eth)
@@ -43,13 +40,11 @@ var ignoreCheckboxes = new Set();
 var rejectedModules = new Set(); // set / array ? - FIXME: currently unused - add removed lessons (by left click on timetable) to rejectedModules
 
 var exceptionModules = ["INF1"] //Modules that are only provided in presence TODO: complete list
-//FIXME: VWA is only provided remote (?)
 
-
-var alertModules =  {"LPK1A":"Die Module LPK1A und LPK1B können nicht von höhersemestrigen Studierenden besucht werden. Als Alternative gibt es LPK1q und LPK1r.","LPK1B":"Die Module LPK1A und LPK1B können nicht von höhersemestrigen Studierenden besucht werden.  Als Alternative gibt es LPK1q und LPK1r."} //modules where special rules apply
+var alertModules =  ["LPK1A","LPK1B"] //modules where special rules apply TODO:
 
 var moduleCountDict = {}
-var doublebooking = false //default value
+var doublebooking = false
 var studium = "";
 
 function hideAllIgnoredSubjects(column){
@@ -106,6 +101,8 @@ function getModuleType(semester_and_moduletype) {
     //if type is not in presence or remote
     else{
         console.error("unknown moduletype")
+        //TODO: throw error?
+        return "unsupported"
     }
 }
 
@@ -113,11 +110,10 @@ function getModuleType(semester_and_moduletype) {
 function addCheckboxtoIgnoreArray(){
     var idSelector = function() { return this.id; };
     var dontPopulate = $(":checkbox:checked").map(idSelector).get();
-    //TODO: remove all checkbox ids from outside of checkbox table
     dontPopulate.forEach(ignoreCheckboxes.add, ignoreCheckboxes);
 }
 
-function isEarlierSubjectBooked(lesson){
+function isEarlierSubjectBooked(lesson){ //FIXME: the subject two semesters earlier also allows the user to book this subject
     //get index of module
     let index = lesson.module_name.charAt(lesson.module_name.length-2)
     
@@ -131,7 +127,7 @@ function isEarlierSubjectBooked(lesson){
     let lastIndex = index - 1
 
     if(lastIndex == 0){
-        //on first occurance of module
+        //on first occurance of module (no earlier module)
         return true
     }
 
@@ -150,8 +146,7 @@ function populate(){
         alert("Bitte Studium auswählen")
         return
     }
-    
-    //TODO: check if all necessary variables are set (Studienart)
+
     disableInputs();
     changePopulateButtonBehaviour();
 
@@ -190,13 +185,10 @@ function populate(){
                 
                 //check if lesson.moduleType matches studium
                 if(lesson.moduleType != studium){
-                    console.log(lesson.module_name.slice(0,-1))
-                    console.log(exceptionModules)
-                    console.log(lesson.module_name.slice(0,-1) in exceptionModules)
                     
-                    if(!(exceptionModules.includes(lesson.module_name.slice(0,-1)))){ // not an exception module
+                    if(!(exceptionModules.includes(lesson.module_name.slice(0,-1)))){
                         console.warn(`${lesson.module_name} is ignored - module study type does not match selected type`)
-                        continue //stay in lessonloop but skip this lesson
+                        continue //stay in lessonloop - skip this lesson
                     }
                     console.log(lesson.subject + " is an exception module")
                 }
@@ -205,11 +197,13 @@ function populate(){
                 let index = lessonsArray[semester][subjectindex].indexOf(lesson) + 1;
                 let lessonCount = lessonsArray[semester][subjectindex].length;
 
-                if(!ignoreAP.has(lesson.module_name.slice(0,-1)) && !ignoreCheckboxes.has(lesson.module_name.slice(0,-1)) ){ //???
+                if(!ignoreAP.has(lesson.module_name.slice(0,-1)) && !ignoreCheckboxes.has(lesson.module_name.slice(0,-1)) ){ 
+                    //FIXME: add rejectedModules (check against lesson.moduleandteacher)
                     
-                    //FIXME: - if not in specified scheme:
                     if(lesson.timetableindex == undefined){
-                        break
+                        //This should not happen - if it does, either lesson-HourSchemes or the provided ics files are not correct
+                        alert("Es ist ein Fehler aufgetreten.")
+                        throw new Error("The timetableindex of lesson " + lesson.moduleAndteacher + " is undefined")
                     }
                     
                     console.log(`trying to populate  ${lesson.module_name} ${index}/${lessonCount}`)
@@ -235,8 +229,7 @@ function populate(){
                         }
                     }
                     else{
-                        //complete subject doesn't fit in timetable
-                        //remove all of "lesson" from timetable
+                        //complete subject doesn't fit in timetable - remove all of "lesson" from timetable
                         removeLessons(lesson);
                         break //leave loop to ignore remaining lessons of this module
                     }
@@ -335,7 +328,10 @@ $(document).ready(function(){
         if(event.which == 1){ //TODO: right click not working (3)
             var cell = $(this);
 
-            console.log(`removing ${cell.text()}`);  
+            console.log(`removing ${cell.text()}`);
+            
+            //add cell.text() to rejectedModules
+            rejectedModules.add(cell.text())
             
             // remove color from checkbox table cell
             let checkboxid = cell.text().split(" ")[0].slice(0,-1)
@@ -432,7 +428,7 @@ const fetchFiles = (iterator) => {
 
         })
     } else {
-        filesRead();
+        doneReadingFiles();
     }
 }
 
@@ -497,7 +493,7 @@ var time_table = <Mytable headings={Days} lessons={lessons}/>;
 
 
 /**Function that is called after the checkboxtable is rendered */
-function filesRead(){
+function doneReadingFiles(){
     unsupportedSubjects.forEach(subject => ChangeCheckboxVisibilityByClassName(subject, 'hide'))
 
     //get all options of second-lang select
@@ -591,7 +587,7 @@ function ChangeCheckboxState(element, state){
         element.firstChild.firstChild.checked = state;
     }
     catch(e){
-        //header doesn't have checkbox child
+        //header & emptyFields don't have a checkbox child
     }
 }
 
