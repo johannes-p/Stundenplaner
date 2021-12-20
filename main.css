@@ -12,6 +12,9 @@ body{
         background-attachment: fixed;
     }
 
+#inputbox{
+        height: 100%;
+    }
 
 .container{
         /*Center vertically*/

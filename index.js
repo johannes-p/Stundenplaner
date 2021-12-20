@@ -1,5 +1,4 @@
 //Necessary:
-//TODO: Add timestamp "age" of .ics files9
 
 //TODO: remove all later lessons if earlier lesson is removed from timetable
 
@@ -10,12 +9,6 @@
 //TODO: Use ical.js functionality instead of indexing to array values -> generateLessonArray()
 
 //TODO: Add / calculate hour count (individual + presence)
-
-//FIXME: when removing lessons and clicking populate, cells sometimes miss the lesson class (styling)
-// Can be ignored while populating is only allowed once ^^^
-//FIXME: pressing populate a second time after removing lessons is broken
-
-//TODO: on populate first remove all subjects from ignoreAP and reset checkbox colors in checkboxtable
 
 //TODO: if full hour make cell span 2 rows - after populating check if row = row + 1 (/row = row-1) (only on even numbers) -> rowspan 2 and remove entry on row+1
 
@@ -84,6 +77,57 @@ function getModuleCounter(subject, semester){
     
 }
 
+function setSemesterStamp(files){
+    var stamp;
+    let laststamp;
+
+    let start = new Date()
+
+    new Promise(function(resolve, reject){
+
+        for (let file of files){
+
+            //fetch
+            fetch(file)
+            //get last modified date
+            .then(response => response.headers.get("Last-Modified"))
+            //parse date
+            .then(date => new Date(date))
+            //get if date is in winter or summer
+            .then(date => {
+                if(date.getMonth() < 5){
+                    stamp = "Wintersemester"
+                } else {
+                    stamp = "Sommersemester"
+                }
+
+                stamp += " " + date.getFullYear()
+
+                if(laststamp == undefined){
+                    laststamp = stamp
+                } else if(laststamp != stamp){
+                    throw("Die .ics-Dateien sind nicht im selben Semester!")
+                }
+
+                //if last file, resolve
+                if(file == files[files.length-1]){
+                    resolve()
+                }
+
+            })
+        }
+    }).then(function(){
+        //print elapsed since start time
+        let end = new Date()
+        let elapsed = end - start
+        console.log("Elapsed time: " + elapsed + "ms")
+
+        document.getElementById("semesterStamp").innerHTML = stamp
+    })
+    
+}
+
+
 function getModuleType(semester_and_moduletype) {
     let presence = ["a", "b", "c", "d", "e", "f"]
     let remote = ["s", "t", "u", "p", "q", "r"]
@@ -148,7 +192,6 @@ function populate(){
     }
 
     disableInputs();
-    changePopulateButtonBehaviour();
 
     // lessonsArray.shift() // removing empty slot FIXME: Not sure if necessary
     let lesson;
@@ -199,6 +242,12 @@ function populate(){
 
                 if(!ignoreAP.has(lesson.module_name.slice(0,-1)) && !ignoreCheckboxes.has(lesson.module_name.slice(0,-1)) ){ 
                     //FIXME: add rejectedModules (check against lesson.moduleandteacher)
+                    console.log(rejectedModules)
+                    console.log(lesson.module_name_teacher)
+                    if(rejectedModules.has(lesson.module_name_teacher)){
+                        console.warn(`${lesson.module_name_teacher} rejected earlier`)
+                        continue
+                    }
                     
                     if(lesson.timetableindex == undefined){
                         //This should not happen - if it does, either lesson-HourSchemes or the provided ics files are not correct
@@ -253,17 +302,6 @@ function disableInputs() {
     $("select").each(function () {
         this.disabled = true;
     });
-}
-
-function changePopulateButtonBehaviour() {
-    var startBtn = document.getElementById("start-btn");
-    startBtn.innerHTML = "Seite neuladen";
-    startBtn.className = "button is-danger";
-
-    //change button function to refresh page
-    startBtn.onclick = function () {
-        location.reload();
-    };
 }
 
 function removeLessons(lesson) {
@@ -337,15 +375,22 @@ $(document).ready(function(){
             let checkboxid = cell.text().split(" ")[0].slice(0,-1)
             $("#" + checkboxid).parent().parent().css("background-color", "white");
 
-            //get all elements with this text
-            var elements = $(`td:contains(${cell.text()})`);
-            
-            //remove text of all elements
-            elements.each(function(){
-            $(this).text("");
-            $(this).removeAttr("class");
-            $(this).addClass("empty");
-        });  
+            //remove module from dictionary
+            for (let rows in lessons) {
+                for (let col in lessons[rows]) {
+                    if (lessons[rows][col] == cell.text()) {
+                        lessons[rows][col] = "";
+                    }
+                }
+            }
+
+            //remove module from AP
+            let module = cell.text().split(" ")[0].slice(0,-1)
+            ignoreAP.delete(module)
+
+            //update timetable
+            time_table = <Mytable headings={Days} lessons={lessons}/>;
+            ReactDOM.render(time_table, document.getElementById("timetable"));
         }
     });
 });
@@ -377,7 +422,7 @@ function generateLessonArray(filename){
         
         let module_name = subject + Counter + semester_and_moduletype.charAt(1); //FIXME: CHECKBOX IDS
         
-        let moduleAndteacher = module_name + "_" + teacher;
+        let moduleAndteacher = module_name + " " + teacher;
         
         if(lessonsArray[semester] == undefined){
             lessonsArray[semester] = new Array;
@@ -495,6 +540,8 @@ var time_table = <Mytable headings={Days} lessons={lessons}/>;
 /**Function that is called after the checkboxtable is rendered */
 function doneReadingFiles(){
     unsupportedSubjects.forEach(subject => ChangeCheckboxVisibilityByClassName(subject, 'hide'))
+
+    setSemesterStamp(files);
 
     //get all options of second-lang select
     var secondLangOptions = $("#second-lang option");
