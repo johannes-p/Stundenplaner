@@ -1,16 +1,16 @@
 class lesson{
     constructor(subject, starttime, endtime, weekday, teacher, module_name, duration, moduleAndteacher, moduleType){
-        this.subject = subject;
+        this.subject = subject;                                     // "M"
         this.starttime = starttime;
         this.endtime = endtime;
         this.weekday = weekday;
-        this.teacher = teacher;
-        this.module_name = module_name;
-        this.duration = duration;
-        this.module_name_teacher = moduleAndteacher;
+        this.teacher = teacher;                                     // Lehrerkürzel
+        this.module_name = module_name;                             // "M8S"
+        this.duration = duration;                                   // duration in minutes
+        this.module_name_teacher = moduleAndteacher;                // "M8S Lehrerkürzel"
 
-        this.moduleType = moduleType;
+        this.moduleType = moduleType;                               //präsenz od. fernstudium
 
-        this.timetableindex = getTimeTableIndex(starttime,endtime);
+        this.timetableindex = getTimeTableIndex(starttime,endtime); // row index
     }
 }

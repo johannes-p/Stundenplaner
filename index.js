@@ -2,8 +2,6 @@
 
 //TODO: remove all later lessons if earlier lesson is removed from timetable
 
-// ME / BE seem to have two types of modules - WIKU / ..
-
 //Nice to have:
 
 //TODO: Use ical.js functionality instead of indexing to array values -> generateLessonArray()
@@ -23,16 +21,12 @@ var files = ["./data/1A.ics","./data/1S.ics","./data/1P.ics","./data/2S.ics","./
 //invert files array
 files = files.reverse()
 
-//DAZ2 (- 2 is not the index) (Freifach?) //SWa SWb ??? //"Darstellendes Spiel"
+//DAZ2 (- 2 is not the index) (Freifach?) SWa SWb ??? "Darstellendes Spiel"
 var unsupportedSubjects = ["R","Eth","ÖKO","DAZ2","PBLT"] //ÖKO unsupported - no way of telling which module is 1 / 2 TODO: complete list
-
-//TODO: allow booking of "R" or "Eth" in presence (remove from unsupportedSubjects - add selector for R/Eth)
 
 var ignoreAP = new Set(); //"already populated"
 var ignoreCheckboxes = new Set();
-var rejectedModules = new Set(); // set / array ? - FIXME: currently unused - add removed lessons (by left click on timetable) to rejectedModules
-
-var exceptionModules = ["INF1"] //Modules that are only provided in presence TODO: complete list
+var rejectedModules = new Set();
 
 var alertModules =  ["LPK1A","LPK1B"] //modules where special rules apply TODO:
 
@@ -81,8 +75,6 @@ function setSemesterStamp(files){
     var stamp;
     let laststamp;
 
-    let start = new Date()
-
     new Promise(function(resolve, reject){
 
         for (let file of files){
@@ -94,8 +86,8 @@ function setSemesterStamp(files){
             //parse date
             .then(date => new Date(date))
             //get if date is in winter or summer
-            .then(date => {
-                if(date.getMonth() < 5){
+            .then(date => { //FIXME: dependent on ics download date 
+                if(date.getMonth() <= 8){
                     stamp = "Wintersemester"
                 } else {
                     stamp = "Sommersemester"
@@ -117,11 +109,6 @@ function setSemesterStamp(files){
             })
         }
     }).then(function(){
-        //print elapsed since start time
-        let end = new Date()
-        let elapsed = end - start
-        console.log("Elapsed time: " + elapsed + "ms")
-
         document.getElementById("semesterStamp").innerHTML = stamp
     })
     
@@ -133,7 +120,6 @@ function getModuleType(semester_and_moduletype) {
     let remote = ["s", "t", "u", "p", "q", "r"]
     let type = semester_and_moduletype.charAt(1).toLowerCase()
 
-    console.log(type)
     //if type is in presence
     if(presence.includes(type)){
         return "presence"
@@ -145,7 +131,7 @@ function getModuleType(semester_and_moduletype) {
     //if type is not in presence or remote
     else{
         console.error("unknown moduletype")
-        //TODO: throw error?
+        // throw error?
         return "unsupported"
     }
 }
@@ -157,7 +143,7 @@ function addCheckboxtoIgnoreArray(){
     dontPopulate.forEach(ignoreCheckboxes.add, ignoreCheckboxes);
 }
 
-function isEarlierSubjectBooked(lesson){ //FIXME: the subject two semesters earlier also allows the user to book this subject
+function isEarlierSubjectBooked(lesson){ //FIXME: the subject two semesters earlier allows the user to book this subject
     //get index of module
     let index = lesson.module_name.charAt(lesson.module_name.length-2)
     
@@ -169,19 +155,55 @@ function isEarlierSubjectBooked(lesson){ //FIXME: the subject two semesters earl
     }
     
     let lastIndex = index - 1
-
     if(lastIndex == 0){
         //on first occurance of module (no earlier module)
         return true
     }
 
+    let secondToLastIndex = lastIndex - 1
+
+    if(secondToLastIndex == 0){
+        return true
+        //second module
+        // FIXME: can the second module be booked if the first one wasn't booked/attended? - remove this block if not
+    }
+
+    let secondToLastModule = lesson.subject + secondToLastIndex
     let lastModule = lesson.subject + lastIndex
 
-    if(ignoreAP.has(lastModule) || ignoreCheckboxes.has(lastModule)){
+    console.log(lastModule + " trying to populate " + lesson.module_name_teacher)
+
+    // if last or second to last module was attended or is booked
+    if(ignoreAP.has(lastModule) || ignoreCheckboxes.has(lastModule) || ignoreAP.has(secondToLastModule) || ignoreCheckboxes.has(secondToLastModule)){
         return true
     } else {
         return false
     }
+}
+
+
+function bookable(lesson){
+    if(!isEarlierSubjectBooked(lesson)){
+        console.warn(`earlier modules of ${lesson.module_name} not attended/booked - skipping`) //FIXME: maybe print subject + counter instead of module_name
+        return false
+    }
+
+    // D8 / E8 / M8 - only book if attended module in 7. Semester //TODO: check if this is correct 
+    if(lesson.subject == "D" || lesson.subject == "E" || lesson.subject == "M"){
+        if(lesson.module_name.charAt(lesson.module_name.length-2) == "8"){
+            if(!ignoreCheckboxes.has(lesson.subject + "7")){
+                console.warn(`${lesson.subject} not attended in 7. Semester - skipping`)
+                return false
+            }
+        }
+    }
+    
+
+
+    //TODO:
+
+    return true
+
 }
 
 
@@ -193,15 +215,10 @@ function populate(){
 
     disableInputs();
 
-    // lessonsArray.shift() // removing empty slot FIXME: Not sure if necessary
     let lesson;
-    addCheckboxtoIgnoreArray() //FIXME: add to another array
+    addCheckboxtoIgnoreArray();
     for(let semester in lessonsArray){
         console.log(lessonsArray)
-        //check if lessonsArray[semester] empty
-        // if(lessonsArray[semester].length == 0){ //FIXME: if continue -> code breaks --- lessonArray[semester].length is always 0
-        //     continue;
-        // }
         for(let subjectindex in lessonsArray[semester]){
 
         lessonloop:            
@@ -211,8 +228,7 @@ function populate(){
                     break
                 }
 
-                if(!isEarlierSubjectBooked(lesson)){
-                    console.warn(`earlier modules of ${lesson.module_name} not attended/booked - skipping`)
+                if(!bookable(lesson)){
                     break
                 }
 
@@ -228,12 +244,8 @@ function populate(){
                 
                 //check if lesson.moduleType matches studium
                 if(lesson.moduleType != studium){
-                    
-                    if(!(exceptionModules.includes(lesson.module_name.slice(0,-1)))){
-                        console.warn(`${lesson.module_name} is ignored - module study type does not match selected type`)
-                        continue //stay in lessonloop - skip this lesson
-                    }
-                    console.log(lesson.subject + " is an exception module")
+                    console.warn(`${lesson.module_name} is ignored - module study type does not match selected type`)
+                    continue //stay in lessonloop - skip this lesson
                 }
 
 
@@ -241,12 +253,9 @@ function populate(){
                 let lessonCount = lessonsArray[semester][subjectindex].length;
 
                 if(!ignoreAP.has(lesson.module_name.slice(0,-1)) && !ignoreCheckboxes.has(lesson.module_name.slice(0,-1)) ){ 
-                    //FIXME: add rejectedModules (check against lesson.moduleandteacher)
-                    console.log(rejectedModules)
-                    console.log(lesson.module_name_teacher)
                     if(rejectedModules.has(lesson.module_name_teacher)){
                         console.warn(`${lesson.module_name_teacher} rejected earlier`)
-                        continue
+                        continue //stay in lessonloop - skip this lesson
                     }
                     
                     if(lesson.timetableindex == undefined){
@@ -264,7 +273,7 @@ function populate(){
                             if(lessons[lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] == ""){
                                 lessons[lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name} ${lesson.teacher}`;
                             } else {
-                                //if 2nd half of lesson doesn't fit
+                                //if 2nd half of lesson doesn't fit (2 half hour lessons)
                                 removeLessons(lesson);
                                 break
                             }
@@ -320,7 +329,6 @@ function removeLessons(lesson) {
 function styleCheckboxtable(){
     console.log(ignoreAP)
     ignoreAP.forEach(module => {
-        //style element with id = module
         $("#" + module).parent().parent().css("background-color", "rgb(41, 196, 165, 0.5)"); //FIXME: add to css instead?
     })
 }
@@ -339,7 +347,6 @@ function getTimeTableIndex(starttime,endtime){
             if( endtimeString <= HalfHourScheme[x][1])
             {
                 //This is a halfhour lesson!
-                //console.log(`Index: ${x}`)
                 return x
             }
         }
@@ -350,9 +357,6 @@ function getTimeTableIndex(starttime,endtime){
         {
             if( endtimeString <= FullHourScheme[x][1])
             {
-                //console.log(`Index: ${x}`)
-                //TODO: Cell span 2
-                //FIXME: This will break stuff
                 return x*2
             }
         }
@@ -397,10 +401,6 @@ $(document).ready(function(){
 
 function generateLessonArray(filename){
     if(events.length == 0){
-        // alert("Keine Stunden gefunden!")
-        // // let semester_and_moduletype = filename.split("/")[filename.split("/").length - 1].split(".")[0] // filename.split.length equal -1 (last element of array)
-        // // let semester = semester_and_moduletype.charAt(0)
-        // // lessonsArray[semester] = new Array() //FIXME: empty array needed? might shift counter?
         return
     }
 
@@ -496,14 +496,13 @@ function Mytable(props){
     for(let row=0; row<rowCount; row++){ //hour counter
         items["rows"][row] = new Array; //new array => new row
         if(row%2 == 0){
-            items["rows"][row].push(<td className="rowInfo" rowSpan ="2">{(row/2)+1}.Stunde</td>) //FIXME: added rowspan - remove if not working
+            items["rows"][row].push(<td className="rowInfo" rowSpan ="2">{(row/2)+1}.Stunde</td>)
         }
     }
 
     for(let row=0; row<rowCount; row++){
         for(let column=0; column < colCount; column++){
             
-            //TODO: Check if lessons[row-1][col] has rowspan2 in that case "continue"
             if(lessons[row][column] != "" && lessons[row][column] !== undefined){
                 items["rows"][row].push(<td className="lesson">{lessons[row][column]}</td>) //Iterating over lessons (Mon 1h -> Tue 1h -> ... -> Mon 2h -> ..)
             }
@@ -587,10 +586,8 @@ function doneReadingFiles(){
     })
 
     studytypeSelect.addEventListener("change", function(e){
-        //TODO: change visibility of R/Eth select - which change visibility of checkboxes
         if(e.target.value == "FS"){
             studium = "remote"
-            //TODO: reset R/Eth select - check all R&Eth checkboxes and hide them
         } else if(e.target.value == "PS"){
             studium = "presence"
         }
@@ -615,7 +612,6 @@ function doneReadingFiles(){
 
         element.addEventListener('change', function(e){
             if(element.checked){
-                console.log(e.target.id)
 
                 let id = e.target.id
                 let semester = id.slice(-1)
@@ -656,7 +652,6 @@ function ChangeCheckboxVisibilityByClassName(name, state){
 }
 
 function openInfoModal(){
-    //add "is-active" class to div with id "info-modal"
     document.getElementById("info-modal").classList.add("is-active");   
 }
 
