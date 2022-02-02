@@ -12,5 +12,6 @@ class lesson{
         this.moduleType = moduleType;                               //präsenz od. fernstudium
 
         this.timetableindex = getTimeTableIndex(starttime,endtime); // row index
+        // this.isInBothtables = false;                              // true if lessons[semester][otherweek][moduleAndteacher] is defined and all values except "week" match
     }
 }
