@@ -58,14 +58,6 @@ body{
   margin-bottom: 30px;
 }
 
-/* .empty{
-    background: rgb(143, 86, 153);
-} */
-
-/* #checkboxtable td:nth-child(even){
-            background-color: rgba(80, 74, 74, 0.15);
-} */
-
 #checkboxtable{
   /*center horizontally*/
     margin-left: auto;

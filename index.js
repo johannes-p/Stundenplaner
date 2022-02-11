@@ -10,7 +10,7 @@
 
 //TODO: if full hour make cell span 2 rows - after populating check if row = row + 1 (/row = row-1) (only on even numbers) -> rowspan 2 and remove entry on row+1
 
-let events = []; //calendar events
+// let events = []; //calendar events
 const weekdays = new Array("Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag")
 
 const lessonsArray = new Array;
@@ -27,7 +27,7 @@ filesA = filesA.reverse()
 filesB = filesB.reverse()
 
 //DAZ2 (- 2 is not the index) (Freifach?) SWa SWb ??? "Darstellendes Spiel"
-var unsupportedSubjects = ["R","Eth","ÖKO","DAZ2","PBLT"] //ÖKO unsupported - no way of telling which module is 1 / 2 TODO: complete list
+var unsupportedSubjects = ["R","Eth","ÖKO","DAZ1","DAZ2","PBLT"] //ÖKO unsupported - no way of telling which module is 1 / 2 TODO: complete list
 
 var ignoreAP = new Set(); //"already populated"
 var ignoreCheckboxes = new Set();
@@ -93,7 +93,7 @@ function setSemesterStamp(files){
             .then(date => new Date(date))
             //get if date is in winter or summer
             .then(date => { //FIXME: dependent on ics download date 
-                if(date.getMonth() <= 8){
+                if(date.getMonth() >= 8 || date.getMonth() <= 2){
                     stamp = "Wintersemester"
                 } else {
                     stamp = "Sommersemester"
@@ -104,7 +104,7 @@ function setSemesterStamp(files){
                 if(laststamp == undefined){
                     laststamp = stamp
                 } else if(laststamp != stamp){
-                    throw("Die .ics-Dateien sind nicht im selben Semester!")
+                    // throw("Die .ics-Dateien sind nicht im selben Semester!")
                 }
 
                 //if last file, resolve
@@ -226,7 +226,7 @@ function populate(){
     for(let semester in lessonsArray){
         console.log(lessonsArray)
 
-        for(let subjectkey in lessonsArray[semester]['A']){ // LOOP for subjects existing in A and B //TODO: LOOP for subjects which only exist in B
+        for(let subjectkey in lessonsArray[semester]['A']){ // LOOP for subjects existing in A and B
 
         lessonloop:            
             for(lesson of lessonsArray[semester]['A'][subjectkey]){
@@ -444,16 +444,17 @@ function disableInputs() {
 }
 
 function removeLessons(lesson) {
-    for (let rows in timetableArray) {
-        for (let col in timetableArray[rows]) {
-            if (timetableArray[rows][col] == `${lesson.module_name} ${lesson.teacher}`) {
-                console.log("removing " + col);
-                timetableArray[rows][col] = "";
+    for(let week in timetableArray){
+        for(let day in timetableArray[week]){
+            for(let row in timetableArray[week][day]){
+                if(timetableArray[week][day][row] == `${lesson.module_name} ${lesson.teacher}`){
+                    timetableArray[week][day][row] = "";
+                }
             }
         }
     }
 
-    console.log(`row ${lesson.timetableindex} on ${lesson.weekday} already populated`);
+    console.log(`row ${lesson.timetableindex + 1} on ${lesson.weekday} already populated`);
 }
 
 function styleCheckboxtable(){
@@ -531,7 +532,7 @@ $(document).ready(function(){
     });
 });
 
-function generateLessonArray(filename, week){
+function generateLessonArray(filename, week, events){
     if(events.length == 0){
         return
     }
@@ -585,72 +586,51 @@ var reader = new FileReader();
 var reader2 = new FileReader();
 
 const fetchFiles = (iterator) => {
-
-    if(filesA.length != filesB.length){
-        console.error("filesA and filesB are not the same length")
-        //TODO: alert
-        return
-    }
-
-    if (iterator >= 0)
-    {
-        fetch(filesA[iterator])
-        .then(res => res.blob())
+    if(iterator >=0){
+        const RequestA = fetch(filesA[iterator])
+        .then(response => response.blob())
         .then(blob => {
             reader.readAsText(blob);
 
-            reader.onload = function(e) {
-                // The file's text will be printed here
-                //console.log(e.target.result)
+            reader.onload = function(){
+                let iCalData = reader.result;
+                let jCalData = ICAL.parse(iCalData);
+
+                let events = jCalData[2];
+
+                generateLessonArray(filesA[iterator], "A", events);
+                console.log(`${filesA[iterator]} loaded`);
+            }
+            
+        })
+
+        const RequestB = fetch(filesB[iterator])
+        .then(response => response.blob())
+        .then(blob => {
+            reader2.readAsText(blob);
+
+            reader2.onload = function(){
+                let iCalData = reader2.result;
+                let jCalData = ICAL.parse(iCalData);
                 
-                var iCalendarData = reader.result;
-                var jcalData = ICAL.parse(iCalendarData);
-                    
-                events = jcalData[2];
-                
-                generateLessonArray(filesA[iterator], "A")
-                
+                let events = jCalData[2];
 
-                console.log(`reading ${filesA[iterator]}`)
+                generateLessonArray(filesB[iterator], "B", events);
+                console.log(`${filesB[iterator]} loaded`)
+            }
+        })
 
-              };
-
-        }).then( () => {
-            //fetch files for week B/2
-            fetch(filesB[iterator])
-            .then(res => res.blob())
-            .then(blob => {
-                reader2.readAsText(blob);
-
-                reader2.onload = function(e) {
-                    // The file's text will be printed here
-                    //console.log(e.target.result)
-                    
-                    var iCalendarData = reader2.result;
-                    var jcalData = ICAL.parse(iCalendarData);
-                        
-                    events = jcalData[2];
-                    
-                    generateLessonArray(filesB[iterator],"B")
-                    
-
-                    console.log(`reading ${filesB[iterator]}`)
-                    
-                    fetchFiles(iterator-1);
-                };
-
-            })
-        
+        Promise.all([RequestA, RequestB]).then(() => {
+            fetchFiles(iterator-1)
         })
 
     } else {
-        doneReadingFiles();
+        doneReadingFiles()
     }
 }
 
-fetchFiles(filesA.length-1)    //load all files
+fetchFiles(filesA.length-1)
 
-//read files from both directories (beware of the change for "filename" in generateLessonArray)
 
 function Mytable(props){
     const items = [];
