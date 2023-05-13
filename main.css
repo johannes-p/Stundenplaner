@@ -1,36 +1,25 @@
-@import "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css";
-
 html{
         height: 100%;
-        background: linear-gradient(to top right, cyan, pink 60%);
+        background: linear-gradient(to top right, cyan, pink 60%) fixed;
     }
 
 body{
         margin: 0;
-        height: 100%;
+        /* height: 100%; */
         background-repeat: no-repeat;
         background-attachment: fixed;
-        overflow: hidden;
+        /* overflow: hidden; */
     }
 
-#inputbox{
-        height: 100%;
-    }
+#timetableA, #timetableB {
+  border-radius: 10px;
+  border-style: hidden; /*to remove outer boarders*/
+  overflow: hidden; /*remove overflow (pointy edge) from last table entry*/
+  height: 100%;
+}
 
-.container{
-        /*Center vertically*/
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-    }
-
-#timetable{
-    border-radius: 10px;
-    border-style: hidden; /*to remove outer boarders*/
-    overflow: hidden; /*remove overflow (pointy edge) from last table entry*/
-    height: 100%;
+#timetableA td, #timetableB td {
+  border: 1px solid black;
 }
 
 #timetable th{
@@ -53,21 +42,6 @@ body{
   float: right;
 }
 
-/*add margin <p> tags in "info-modal"*/
-.block p{
-  margin-bottom: 30px;
-}
-
-#checkboxtable{
-  /*center horizontally*/
-    margin-left: auto;
-    margin-right: auto;
-
-    border-radius: 10px;
-    border-style: hidden;
-    overflow: hidden;
-}
-
 #checkboxtable th:first-child{
   border-left: 1px solid #DBDBDB;
 }
@@ -87,12 +61,15 @@ body{
   border-bottom: 1px solid #DBDBDB;
 }
 
+#checkboxtable tr td{
+  border-bottom: 1px solid #DBDBDB;
+}
+
 /* #emptyField{
     background: rgb(55, 81, 93);
 } */
 
-#loading{ /*FIXME: on mobile (iPad setting) the loading icon is shifting when fading out*/
-  /*center horizontally*/
+#loading{
     margin-left: auto;
     margin-right: auto;
 

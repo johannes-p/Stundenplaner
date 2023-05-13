@@ -1,30 +1,6 @@
-//Necessary:
-
-//TODO: remove all later lessons if earlier lesson is removed from timetable
-
-//Nice to have:
-
-//TODO: Use ical.js functionality instead of indexing to array values -> generateLessonArray()
-
-//TODO: Add / calculate hour count (individual + presence)
-
-//TODO: if full hour make cell span 2 rows - after populating check if row = row + 1 (/row = row-1) (only on even numbers) -> rowspan 2 and remove entry on row+1
-
-// let events = []; //calendar events
 const weekdays = new Array("Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag")
 
-const lessonsArray = new Array;
-
-// var files = ["./data/1A.ics","./data/1S.ics","./data/1P.ics","./data/2S.ics","./data/3P.ics","./data/4S.ics","./data/5S.ics","./data/5P.ics","./data/6S.ics","./data/7S.ics","./data/7P.ics","./data/8S.ics"] // aufsteigend
-
-var filesA = ["./data/A/1A.ics","./data/A/1S.ics","./data/A/1P.ics","./data/A/2S.ics","./data/A/3P.ics","./data/A/4S.ics","./data/A/5S.ics","./data/A/5P.ics","./data/A/6S.ics","./data/A/7S.ics","./data/A/7P.ics","./data/A/8S.ics"] // aufsteigend
-var filesB = ["./data/B/1A.ics","./data/B/1S.ics","./data/B/1P.ics","./data/B/2S.ics","./data/B/3P.ics","./data/B/4S.ics","./data/B/5S.ics","./data/B/5P.ics","./data/B/6S.ics","./data/B/7S.ics","./data/B/7P.ics","./data/B/8S.ics"] // aufsteigend
-
-//invert files array
-// files = files.reverse()
-
-filesA = filesA.reverse()
-filesB = filesB.reverse()
+let lessonsArray = new Array;
 
 //DAZ2 (- 2 is not the index) (Freifach?) SWa SWb ??? "Darstellendes Spiel"
 var unsupportedSubjects = ["R","Eth","ÖKO","DAZ1","DAZ2","PBLT"] //ÖKO unsupported - no way of telling which module is 1 / 2 TODO: complete list
@@ -77,14 +53,10 @@ function getModuleCounter(subject, semester){
     
 }
 
-function setSemesterStamp(files){
+function setSemesterStamp(file){
     var stamp;
-    let laststamp;
 
     new Promise(function(resolve, reject){
-
-        for (let file of files){
-
             //fetch
             fetch(file)
             //get last modified date
@@ -92,7 +64,7 @@ function setSemesterStamp(files){
             //parse date
             .then(date => new Date(date))
             //get if date is in winter or summer
-            .then(date => { //FIXME: dependent on ics download date 
+            .then(date => { //FIXME: dependent on download date 
                 if(date.getMonth() >= 8 || date.getMonth() <= 2){
                     stamp = "Wintersemester"
                 } else {
@@ -100,24 +72,11 @@ function setSemesterStamp(files){
                 }
 
                 stamp += " " + date.getFullYear()
-
-                if(laststamp == undefined){
-                    laststamp = stamp
-                } else if(laststamp != stamp){
-                    // throw("Die .ics-Dateien sind nicht im selben Semester!")
-                }
-
-                //if last file, resolve
-                if(file == files[files.length-1]){
-                    resolve()
-                }
-
+                resolve()
             })
-        }
-    }).then(function(){
+        }).then(function(){
         document.getElementById("semesterStamp").innerHTML = stamp
-    })
-    
+    })   
 }
 
 
@@ -174,8 +133,8 @@ function isEarlierSubjectBooked(lesson){ //FIXME: the subject two semesters earl
         // FIXME: can the second module be booked if the first one wasn't booked/attended? - remove this block if not
     }
 
-    let secondToLastModule = lesson.subject + secondToLastIndex
-    let lastModule = lesson.subject + lastIndex
+    let secondToLastModule = lesson.module_name.slice(0, -2) + secondToLastIndex
+    let lastModule = lesson.module_name.slice(0, -2) + lastIndex
 
     console.log(lastModule + " trying to populate " + lesson.module_name_teacher)
 
@@ -195,10 +154,10 @@ function bookable(lesson){
     }
 
     // D8 / E8 / M8 - only book if attended module in 7. Semester //TODO: check if this is correct 
-    if(lesson.subject == "D" || lesson.subject == "E" || lesson.subject == "M"){
+    if(lesson.module_name.slice(0, -2) == "D" || lesson.module_name.slice(0, -2) == "E" || lesson.module_name.slice(0, -2) == "M"){
         if(lesson.module_name.charAt(lesson.module_name.length-2) == "8"){
-            if(!ignoreCheckboxes.has(lesson.subject + "7")){
-                console.warn(`${lesson.subject} not attended in 7. Semester - skipping`)
+            if(!ignoreCheckboxes.has(lesson.module_name.slice(0, -2) + "7")){
+                console.warn(`${lesson.module_name.slice(0, -2)} not attended in 7. Semester - skipping`)
                 return false
             }
         }
@@ -212,6 +171,9 @@ function bookable(lesson){
 
 }
 
+const getTimetableValues = (obj) => (obj && typeof obj === 'object')
+ ? Object.values(obj).map(getTimetableValues).flat()
+ : [obj]
 
 function populate(){
     if(studium == ""){
@@ -230,7 +192,7 @@ function populate(){
 
         lessonloop:            
             for(lesson of lessonsArray[semester]['A'][subjectkey]){
-                if(unsupportedSubjects.includes(lesson.subject)){
+                if(unsupportedSubjects.includes(lesson.module_name.slice(0, -2))){
                     console.warn(`${lesson.module_name} is ignored`)
                     break
                 }
@@ -242,8 +204,8 @@ function populate(){
                 //if doublebooking is set to false and subject is already in ignoreAP, skip
                 if(!doublebooking){
                     for(let subject of ignoreAP){
-                        if(subject.slice(0,-1) == lesson.subject){
-                            console.warn(`${lesson.subject} already booked once - doublebooking is disabled`)
+                        if(subject.slice(0,-1) == lesson.module_name.slice(0, -2)){
+                            console.warn(`${lesson.module_name.slice(0, -2)} already booked once - doublebooking is disabled`)
                             break lessonloop
                         }
                     }
@@ -273,12 +235,12 @@ function populate(){
                     console.log(`trying to populate  ${lesson.module_name} ${index}/${lessonCount}`)
                     if(timetableArray['A'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] == ""){
 
-                        timetableArray['A'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name} ${lesson.teacher}`;
+                        timetableArray['A'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name_teacher}`;
                         
                         console.log(lesson.duration)
                         if(lesson.duration == 45){
                             if(timetableArray['A'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] == ""){
-                                timetableArray['A'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name} ${lesson.teacher}`;
+                                timetableArray['A'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name_teacher}`;
                             } else {
                                 //if 2nd half of lesson doesn't fit (2 half hour lessons)
                                 removeLessons(lesson);
@@ -292,11 +254,11 @@ function populate(){
                         if(lessonsArray[semester]['B'][subjectkey] != undefined){
                             console.log(`${lesson.module_name_teacher} is in week A and B`)
                             if(timetableArray['B'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] == ""){
-                                timetableArray['B'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name} ${lesson.teacher}`;
+                                timetableArray['B'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name_teacher}`;
                             
                                 if(lesson.duration == 45){
                                     if(timetableArray['B'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] == ""){
-                                        timetableArray['B'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name} ${lesson.teacher}`;
+                                        timetableArray['B'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name_teacher}`;
                                     } else {
                                         //if 2nd half of lesson doesn't fit (2 half hour lessons)
                                         removeLessons(lesson);
@@ -340,7 +302,7 @@ function populate(){
 
             lessonloopB:            
                 for(lesson of lessonsArray[semester]['B'][subjectkey]){
-                    if(unsupportedSubjects.includes(lesson.subject)){
+                    if(unsupportedSubjects.includes(lesson.module_name.slice(0, -2))){
                         console.warn(`${lesson.module_name} is ignored`)
                         break
                     }
@@ -352,8 +314,8 @@ function populate(){
                     //if doublebooking is set to false and subject is already in ignoreAP, skip
                     if(!doublebooking){
                         for(let subject of ignoreAP){
-                            if(subject.slice(0,-1) == lesson.subject){
-                                console.warn(`${lesson.subject} already booked once - doublebooking is disabled`)
+                            if(subject.slice(0,-1) == lesson.module_name.slice(0, -2)){
+                                console.warn(`${lesson.module_name.slice(0, -2)} already booked once - doublebooking is disabled`)
                                 break lessonloopB
                             }
                         }
@@ -383,12 +345,12 @@ function populate(){
                         console.log(`trying to populate  ${lesson.module_name} ${index}/${lessonCount}`)
                         if(timetableArray['B'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] == ""){
 
-                            timetableArray['B'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name} ${lesson.teacher}`;
+                            timetableArray['B'][lesson.timetableindex][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name_teacher}`;
                             
                             console.log(lesson.duration)
                             if(lesson.duration == 45){
                                 if(timetableArray['B'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] == ""){
-                                    timetableArray['B'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name} ${lesson.teacher}`;
+                                    timetableArray['B'][lesson.timetableindex+1][weekdays.indexOf(lesson.weekday)-1] = `${lesson.module_name_teacher}`;
                                 } else {
                                     //if 2nd half of lesson doesn't fit (2 half hour lessons)
                                     removeLessons(lesson);
@@ -418,19 +380,13 @@ function populate(){
     }
 
     styleCheckboxtable()
-    timetableComponent = <Mytable headings={Days} timetablelessons={timetableArray[selectedWeek]}/>;
-    ReactDOM.render(timetableComponent, document.getElementById("timetable"));
-}
-
-function toggleTimetableWeek(){
-    selectedWeek = selectedWeek == 'A' ? 'B' : 'A'
-    //change id="weektoggle" button text to "Woche " + selectedWeek
-    document.getElementById("weektoggle").innerHTML = "Woche " + selectedWeek;
-    //change button class from "is-danger" to "is-primary"
-    document.getElementById("weektoggle").classList.toggle("is-warning");
-    document.getElementById("weektoggle").classList.toggle("is-danger");
-    timetableComponent = <Mytable headings={Days} timetablelessons={timetableArray[selectedWeek]}/>;
-    ReactDOM.render(timetableComponent, document.getElementById("timetable"));
+    
+    timetableComponent = <Mytable headings={Days} timetablelessons={timetableArray["A"]}/>;
+    ReactDOM.render(timetableComponent, document.getElementById("timetableA"));
+    timetableComponent = <Mytable headings={Days} timetablelessons={timetableArray["B"]}/>;
+    ReactDOM.render(timetableComponent, document.getElementById("timetableB"));
+    BookedListComponent = <BookedList moduleAndteacherSet={new Set(getTimetableValues(timetableArray))}/>;
+    ReactDOM.render(BookedListComponent, document.getElementById("bookedList"));
 }
 
 function disableInputs() {
@@ -447,7 +403,7 @@ function removeLessons(lesson) {
     for(let week in timetableArray){
         for(let day in timetableArray[week]){
             for(let row in timetableArray[week][day]){
-                if(timetableArray[week][day][row] == `${lesson.module_name} ${lesson.teacher}`){
+                if(timetableArray[week][day][row] == `${lesson.module_name_teacher}`){
                     timetableArray[week][day][row] = "";
                 }
             }
@@ -526,111 +482,40 @@ $(document).ready(function(){
             ignoreAP.delete(module)
 
             //update timetable
-            timetableComponent = <Mytable headings={Days} timetablelessons={timetableArray[selectedWeek]}/>;
-            ReactDOM.render(timetableComponent, document.getElementById("timetable"));
+            timetableComponent = <Mytable headings={Days} timetablelessons={timetableArray["A"]}/>;
+            ReactDOM.render(timetableComponent, document.getElementById("timetableA"));
+            timetableComponent = <Mytable headings={Days} timetablelessons={timetableArray["B"]}/>;
+            ReactDOM.render(timetableComponent, document.getElementById("timetableB"));
+            BookedListComponent = <BookedList moduleAndteacherSet={new Set(getTimetableValues(timetableArray))}/>;
+            ReactDOM.render(BookedListComponent, document.getElementById("bookedList"));
         }
     });
 });
 
-function generateLessonArray(filename, week, events){
-    if(events.length == 0){
-        return
-    }
-
-    for(let index in events){
-        let starttime = new Date(events[index][1][1][3]);
-        let endtime = new Date(events[index][1][2][3]);
-        let duration = Math.round((((endtime-starttime) % 86400000) % 3600000) / 60000); // in mins
-        let subject = events[index][1][4][3].split(" ").at(-1); // [-1] -> last element in array (getting subject from modulename)
-        let weekday = weekdays[starttime.getDay()];
-        let teacher = events[index][1][5][3];
-        
-
-        let semester_and_moduletype = filename.split("/")[filename.split("/").length - 1].split(".")[0] // filename.split.length equal -1 (last element of array)
-        let moduleType = getModuleType(semester_and_moduletype)
-
-        let semester = semester_and_moduletype.charAt(0)
-        
-        var Counter = getModuleCounter(subject, semester)
-        
-        let module_name = subject + Counter + semester_and_moduletype.charAt(1);
-        
-        let moduleAndteacher = module_name + " " + teacher;
-        
-        if(lessonsArray[semester] == undefined){
-            lessonsArray[semester] = new Array;
-        }
-
-        if(lessonsArray[semester][week] == undefined){
-            lessonsArray[semester][week] = new Array;
-        }
-
-        //check if lessonsArray has key module_name
-        if(lessonsArray[semester][week][moduleAndteacher] == undefined){
-            lessonsArray[semester][week][moduleAndteacher] = new Array;
-        }
-
-        if(subject != undefined && starttime != undefined && endtime != undefined && weekday != undefined && teacher != undefined && module_name != undefined && week != undefined){
-            lessonsArray[semester][week][moduleAndteacher].push(new lesson(subject, starttime, endtime, weekday, teacher, module_name, duration, moduleAndteacher, moduleType));
-        } else {
-            console.error("lesson uncomplete")
-        }
-        if(subject == "GSP"){ //TODO: "DEBUG" - Remove this when done
-        console.log(moduleAndteacher + " in week " + week + " added")
-        }
-    }
-
+async function readJSON(filePath) {
+    // fetch the file
+    const response = await fetch(filePath);
+  
+    // read the file contents as text
+    const jsonString = await response.text();
+  
+    // parse the JSON string into an object
+    const data = JSON.parse(jsonString);
+  
+    return data;
 }
 
-var reader = new FileReader();
-var reader2 = new FileReader();
-
-const fetchFiles = (iterator) => {
-    if(iterator >=0){
-        const RequestA = fetch(filesA[iterator])
-        .then(response => response.blob())
-        .then(blob => {
-            reader.readAsText(blob);
-
-            reader.onload = function(){
-                let iCalData = reader.result;
-                let jCalData = ICAL.parse(iCalData);
-
-                let events = jCalData[2];
-
-                generateLessonArray(filesA[iterator], "A", events);
-                console.log(`${filesA[iterator]} loaded`);
-            }
-            
-        })
-
-        const RequestB = fetch(filesB[iterator])
-        .then(response => response.blob())
-        .then(blob => {
-            reader2.readAsText(blob);
-
-            reader2.onload = function(){
-                let iCalData = reader2.result;
-                let jCalData = ICAL.parse(iCalData);
-                
-                let events = jCalData[2];
-
-                generateLessonArray(filesB[iterator], "B", events);
-                console.log(`${filesB[iterator]} loaded`)
-            }
-        })
-
-        Promise.all([RequestA, RequestB]).then(() => {
-            fetchFiles(iterator-1)
-        })
-
-    } else {
+readJSON('data/lessons.json').then(
+    (data) => {
+        lessonsArray = data;
+        // console.log(timetableArray)
         doneReadingFiles()
+    },
+    (error) => {
+      // this function is called if the Promise is rejected
+      // error is the rejected value of the Promise, which is an Error object
     }
-}
-
-fetchFiles(filesA.length-1)
-
+  );
 
 function Mytable(props){
     const items = [];
@@ -648,7 +533,7 @@ function Mytable(props){
     for(let row=0; row<rowCount; row++){ //hour counter
         items["rows"][row] = new Array; //new array => new row
         if(row%2 == 0){
-            items["rows"][row].push(<td className="rowInfo" rowSpan ="2">{(row/2)+1}.Stunde</td>)
+            items["rows"][row].push(<td className="rowInfo" rowSpan ="2">{(row/2)}.Stunde</td>)
         }
     }
 
@@ -656,7 +541,7 @@ function Mytable(props){
         for(let column=0; column < colCount; column++){
             
             if(props.timetablelessons[row][column] != "" && props.timetablelessons[row][column] !== undefined){
-                items["rows"][row].push(<td className="lesson">{props.timetablelessons[row][column]}</td>) //Iterating over lessons (Mon 1h -> Tue 1h -> ... -> Mon 2h -> ..)
+                items["rows"][row].push(<td className="lesson text-center">{props.timetablelessons[row][column]}</td>) //Iterating over lessons (Mon 1h -> Tue 1h -> ... -> Mon 2h -> ..)
             }
             else{
                 items["rows"][row].push(<td className="empty">{props.timetablelessons[row][column]}</td>) //adding another id (cell styling)
@@ -683,21 +568,45 @@ function Mytable(props){
   )
 }
 
+function BookedList(props){
+    const items = [];
+    items["modules"] = new Array();
+    let modules = props.moduleAndteacherSet;
+
+    if(modules == undefined){
+        return (null)
+    }
+
+    for(let module of modules){
+        if(module != ""){
+            items["modules"].push(<li>{module}</li>)
+        }    
+    }
+    console.log(items)
+    return (
+        <React.Fragment>
+            {items["modules"]}
+        </React.Fragment>
+    )
+}
+
 const Days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
 var timetableArray = {'A' : {'0':["","","","",""], '1':["","","","",""], '2':["","","","",""], '3':["","","","",""], '4':["","","","",""], '5':["","","","",""], '6':["","","","",""], '7':["","","","",""], '8':["","","","",""], '9':["","","","",""], '10':["","","","",""], '11':["","","","",""]} ,
                 'B' : {'0':["","","","",""], '1':["","","","",""], '2':["","","","",""], '3':["","","","",""], '4':["","","","",""], '5':["","","","",""], '6':["","","","",""], '7':["","","","",""], '8':["","","","",""], '9':["","","","",""], '10':["","","","",""], '11':["","","","",""]}}  // '0' Array -> 1. row
-
+var moduleAndteacherSet = new Set();
 
 var timetableComponent = <Mytable headings={Days} timetablelessons={timetableArray[selectedWeek]}/>;
-
+var BookedListComponent = <BookedList moduleAndteacherSet={moduleAndteacherSet}/>;
 
 /**Function that is called after the checkboxtable is rendered */
 function doneReadingFiles(){
-    ReactDOM.render(timetableComponent, document.getElementById("timetable"));
+    ReactDOM.render(timetableComponent, document.getElementById("timetableA"));
+    ReactDOM.render(timetableComponent, document.getElementById("timetableB"));
+    ReactDOM.render(BookedListComponent, document.getElementById("bookedList"));
     
     unsupportedSubjects.forEach(subject => ChangeCheckboxVisibilityByClassName(subject, 'hide'))
 
-    setSemesterStamp(filesA.concat(filesB));
+    setSemesterStamp("./data/lessons.json");
 
     //get all options of second-lang select
     var secondLangOptions = $("#second-lang option");
@@ -808,13 +717,25 @@ function ChangeCheckboxVisibilityByClassName(name, state){
     }
 }
 
+function toggleModal(){
+    document.getElementById("info-modal").classList.toggle("block");
+    document.getElementById("info-modal").classList.toggle("hidden");
+    document.body.classList.toggle("overflow-hidden")
+}
+
 function openInfoModal(){
-    document.getElementById("info-modal").classList.add("is-active");   
+    toggleModal();
 }
 
 //close modal (click modal background)
 document.getElementById("info-modal").addEventListener("click", function(e){
     if(e.target.classList.contains("modal-background")){
-        document.getElementById("info-modal").classList.remove("is-active");
+        toggleModal();
     }
 })
+
+var span = document.getElementsByClassName("close")[0];
+
+span.onclick = function() {
+    toggleModal();
+}

@@ -6,10 +6,10 @@ Give it a try: https://johannes-p.github.io/stundenplaner/
 
 ## Frameworks
 - React
-- Bulma
+- Tailwind CSS
 
 ## Possible TODOs:
-- [ ] additional box that shows list of all classes scheduled
+- [✔] additional box that shows list of all classes scheduled
 - [ ] implementation of sanity checks where needed
 - [ ] ...
 
